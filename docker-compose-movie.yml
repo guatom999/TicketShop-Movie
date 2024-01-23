@@ -1,0 +1,40 @@
+version: '3.8'
+
+name: "tikcer-movie-db"
+
+# POSTGRES CANNOT EXPOSE TO OTHER PORT EXCEPT 5432
+
+services:
+  movie-db:
+    image: mongo
+    container_name: movie-db
+    ports:
+      - 27017:27017
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: 123456
+
+# services:
+#   postgres:
+#     image: postgres:latest
+#     container_name: postgresmovie
+#     environment:
+#       POSTGRES_DB: mydatabase
+#       POSTGRES_USER: myuser
+#       POSTGRES_PASSWORD: mypassword
+#     volumes:
+#       - ./moviedb:/var/lib/postgresql/data
+#     ports:
+#       - "5432:5432"
+#     restart: unless-stopped
+  
+#   # Dont Use PGadmin Now
+  # pgadmin:
+  #   image: dpage/pgadmin4
+  #   container_name: pgadmin4
+  #   restart: unless-stopped
+  #   ports:
+  #     - "5051:80"
+  #   environment:
+  #     PGADMIN_DEFAULT_EMAIL: root
+  #     PGADMIN_DEFAULT_PASSWORD: 123456
