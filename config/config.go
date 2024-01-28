@@ -34,7 +34,7 @@ func GetConfig() Config {
 
 	viper.SetConfigName(".env.movie")
 	viper.SetConfigType("env")
-	viper.AddConfigPath("./env")
+	viper.AddConfigPath("../../env")
 	viper.AutomaticEnv()
 
 	err := viper.ReadInConfig()

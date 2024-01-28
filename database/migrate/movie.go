@@ -70,6 +70,52 @@ func MovieMigrate(pctx context.Context, cfg *config.Config) {
 		panic(err)
 	}
 
+	col = db.Collection("categories")
+
+	_, err = col.Indexes().CreateOne(pctx, mongo.IndexModel{
+		Keys: bson.D{{"Name", 1}},
+	})
+
+	if err != nil {
+		log.Fatalf("Error: CreateIndex Failed")
+		panic(err)
+	}
+
+	documents = func() []any {
+		mockData := []movie.Category{
+			{
+				Name: "Comedy",
+			},
+			{
+				Name: "Romantic",
+			},
+			{
+				Name: "Rom-Com",
+			},
+			{
+				Name: "Action",
+			},
+			{
+				Name: "Music",
+			},
+		}
+
+		docs := make([]any, 0)
+
+		for _, i := range mockData {
+			docs = append(docs, i)
+		}
+
+		return docs
+
+	}()
+
+	_, err = col.InsertMany(pctx, documents)
+	if err != nil {
+		log.Fatalf("Error: CreateIndex Failed")
+		panic(err)
+	}
+
 	log.Println("Migrate movies completed:", results)
 
 }

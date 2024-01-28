@@ -11,6 +11,7 @@ import (
 type (
 	MoviesUseCaseService interface {
 		AddOneMovie(pctx context.Context, req *movie.AddMovieReq) error
+		FindAllMovie(pctx context.Context) ([]*movie.MovieData, error)
 	}
 
 	moviesUseCase struct {
@@ -35,5 +36,19 @@ func (u *moviesUseCase) AddOneMovie(pctx context.Context, req *movie.AddMovieReq
 		return err
 	}
 
+	return nil
+}
+
+func (u *moviesUseCase) FindAllMovie(pctx context.Context) ([]*movie.MovieData, error) {
+
+	result, err := u.moviesRepo.FindAllMovie(pctx)
+	if err != nil {
+		return make([]*movie.MovieData, 0), nil
+	}
+
+	return result, nil
+}
+
+func (u *moviesUseCase) FindManyMovie(pctx context.Context, basePaginateUrl string) error {
 	return nil
 }

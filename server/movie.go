@@ -14,5 +14,5 @@ func (s *server) MovieModule() {
 	movieRouter := s.app.Group("/movie")
 
 	movieRouter.POST("/add", movieHandler.AddOneMovie)
-
+	movieRouter.GET("/getallmovie", movieHandler.GetAllMovie)
 }
