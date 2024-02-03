@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/spf13/viper"
@@ -8,9 +9,10 @@ import (
 
 type (
 	Config struct {
-		App App
-		Db  Db
-		Jwt Jwt
+		App   App
+		Db    Db
+		Jwt   Jwt
+		Kafka Kafka
 	}
 
 	App struct {
@@ -28,13 +30,21 @@ type (
 		AccessDuration   int64
 		RefreshDuration  int64
 	}
+
+	Kafka struct {
+		Url   string
+		Topic string
+	}
 )
 
-func GetConfig() Config {
+func GetConfig(path string) Config {
 
-	viper.SetConfigName(".env.movie")
+	viper.SetConfigName(fmt.Sprintf(".env.%s", path))
 	viper.SetConfigType("env")
-	viper.AddConfigPath("../../env")
+	//Config For Migrate
+	// viper.AddConfigPath("../../env")
+	//Config For Normal Api
+	viper.AddConfigPath("./env")
 	viper.AutomaticEnv()
 
 	err := viper.ReadInConfig()
@@ -58,6 +68,10 @@ func GetConfig() Config {
 			ApiSecretKey:     viper.GetString("JWT_API_SECRET_KEY"),
 			AccessDuration:   int64(viper.GetInt("JWT_ACCESS_DURATION")),
 			RefreshDuration:  int64(viper.GetInt("JWT_REFRESH_DURATION")),
+		},
+		Kafka: Kafka{
+			Url:   viper.GetString("KAFKA_URL"),
+			Topic: viper.GetString("KAFKA_API_KEY"),
 		},
 	}
 }

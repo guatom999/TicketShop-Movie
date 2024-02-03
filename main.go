@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"log"
+	"os"
 
 	"github.com/guatom999/TicketShop-Movie/config"
 	"github.com/guatom999/TicketShop-Movie/database"
@@ -12,20 +14,18 @@ func main() {
 
 	ctx := context.Background()
 
-	cfg := config.GetConfig()
+	cfg := config.GetConfig(func() string {
+		if len(os.Args) < 2 {
+			log.Fatal("Error: .env path is required")
+		}
+		log.Printf("choosen env is :%v", os.Args[1])
+		return os.Args[1]
+	}())
 
 	db := database.DbConn(ctx, &cfg)
 
 	defer db.Disconnect(ctx)
 
 	server.NewEchoServer(db, &cfg).Start(ctx)
-
-	// 	func() string {
-	// 	if len(os.Args) < 2 {
-	// 		log.Fatal("Error: .env path is required")
-	// 	}
-	// 	log.Printf("choosen env is :%v", os.Args[1])
-	// 	return os.Args[1]
-	// }()
 
 }
