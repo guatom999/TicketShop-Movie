@@ -16,6 +16,7 @@ type (
 	}
 
 	App struct {
+		Name string
 		Port int
 	}
 
@@ -57,6 +58,7 @@ func GetConfig(path string) Config {
 
 	return Config{
 		App: App{
+			Name: viper.GetString("APP_NAMe"),
 			Port: viper.GetInt("APP_PORT"),
 		},
 		Db: Db{

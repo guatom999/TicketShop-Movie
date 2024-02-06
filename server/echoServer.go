@@ -66,7 +66,12 @@ func (s *server) Start(pctx context.Context) {
 
 	log.Println("Starting server...")
 
-	s.MovieModule()
+	switch s.cfg.App.Name {
+	case "movie":
+		s.MovieModule()
+	case "booking":
+		s.BookingModule()
+	}
 
 	if err := s.app.Start(fmt.Sprintf(":%d", s.cfg.App.Port)); err != nil && err != http.ErrServerClosed {
 		log.Fatalf("Failed to shutdown:%v", err)

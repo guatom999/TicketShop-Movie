@@ -80,6 +80,15 @@ func BookingMigrate(pctx context.Context, cfg *config.Config) {
 		panic(err)
 	}
 
+	col = db.Collection("booking_payment_queue")
+
+	_, err = col.InsertOne(pctx, bson.D{})
+
+	if err != nil {
+		log.Println("insert booking transaction failed")
+		panic(err)
+	}
+
 	log.Println("Migrate Booking History completed:", result)
 
 }

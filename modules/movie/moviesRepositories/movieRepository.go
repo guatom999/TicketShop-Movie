@@ -16,7 +16,9 @@ import (
 type (
 	MoviesRepositoryService interface {
 		InsertMovie(pctx context.Context, req *movie.Movie) error
+		FindOneMovie(pctx context.Context, req *movie.Movie) (*movie.MovieData, error)
 		FindAllMovie(pctx context.Context) ([]*movie.MovieData, error)
+		IsMovieAvaliable(pctx context.Context, req string) bool
 	}
 
 	moviesrepository struct {
@@ -46,6 +48,46 @@ func (r *moviesrepository) InsertMovie(pctx context.Context, req *movie.Movie) e
 
 	return nil
 
+}
+
+// func (r *moviesrepository) IsMovieAvaliable(pctx context.Context, req string) bool {
+
+// 	ctx, cancel := context.WithTimeout(pctx, time.Second*20)
+// 	defer cancel()
+
+// 	db := r.db.Database("movie_db")
+// 	col := db.Collection("movie")
+
+// 	movie := new(movie.Movie)
+
+// 	if err := col.FindOne(ctx, bson.M{"Title": req}).Decode(movie); err != nil {
+// 		log.Printf("Error: IsMovieAvaliable Falied:%s", err.Error())
+// 		return false
+// 	}
+
+// 	if len(movie.Movie) {
+// 		return true
+// 	}
+
+// 	if movie.Avaliable <= 0 {
+// 		log.Printf("Movie %s is out of stock", movie.Title)
+// 		return false
+// 	}
+
+// 	return true
+// }
+
+func (r *moviesrepository) FindOneMovie(pctx context.Context, req *movie.Movie) (*movie.MovieData, error) {
+
+	ctx, cancel := context.WithTimeout(pctx, time.Second*20)
+	defer cancel()
+
+	db := r.db.Database("movie_db")
+	col := db.Collection("movie")
+
+	col.FindOne()
+
+	return nil, nil
 }
 
 func (r *moviesrepository) FindAllMovie(pctx context.Context,

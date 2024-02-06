@@ -9,7 +9,7 @@ import (
 type (
 	Movie struct {
 		Id        primitive.ObjectID `json:"_id" bson:"_id,omitempty"`
-		Title     string             `json:"name" bson:"Title"`
+		Title     string             `json:"name" bson:"title"`
 		Price     float64            `json:"price" bson:"price"`
 		ImageUrl  string             `json:"image_url" bson:"image_url"`
 		CreatedAt time.Time          `json:"created_at" bson:"created_at"`

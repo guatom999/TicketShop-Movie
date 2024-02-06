@@ -2,6 +2,9 @@ package moviesUseCases
 
 import (
 	"context"
+	"fmt"
+	"io/ioutil"
+	"net/http"
 	"time"
 
 	"github.com/guatom999/TicketShop-Movie/modules/movie"
@@ -12,6 +15,7 @@ type (
 	MoviesUseCaseService interface {
 		AddOneMovie(pctx context.Context, req *movie.AddMovieReq) error
 		FindAllMovie(pctx context.Context) ([]*movie.MovieData, error)
+		TestReq(pctx context.Context) (string, error)
 	}
 
 	moviesUseCase struct {
@@ -113,4 +117,31 @@ func (u *moviesUseCase) FindManyMovie(pctx context.Context, basePaginateUrl stri
 	// }, nil
 
 	return nil
+}
+
+func (u *moviesUseCase) TestReq(pctx context.Context) (string, error) {
+
+	url := "http://localhost:8099/booking/test"
+
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+
+	resp, err := client.Get(url)
+	if err != nil {
+		fmt.Println("Error sending GET request:", err)
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println("Error reading response body:", err)
+		return "", err
+	}
+
+	fmt.Println("Response status code:", resp.StatusCode)
+	fmt.Println("Response body:", string(body)) // Assuming JSON response
+
+	return string(body), nil
 }

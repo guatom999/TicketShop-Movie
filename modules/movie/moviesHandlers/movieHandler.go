@@ -13,6 +13,7 @@ type (
 	MoviesHandlerService interface {
 		AddOneMovie(c echo.Context) error
 		GetAllMovie(c echo.Context) error
+		TestReq(c echo.Context) error
 	}
 
 	moviesHandler struct {
@@ -46,6 +47,18 @@ func (h *moviesHandler) GetAllMovie(c echo.Context) error {
 	ctx := context.Background()
 
 	result, err := h.moviesUseCase.FindAllMovie(ctx)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, result)
+	}
+
+	return c.JSON(http.StatusOK, result)
+}
+
+func (h *moviesHandler) TestReq(c echo.Context) error {
+
+	ctx := context.Background()
+
+	result, err := h.moviesUseCase.TestReq(ctx)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, result)
 	}

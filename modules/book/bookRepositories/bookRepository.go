@@ -1,6 +1,10 @@
 package bookRepositories
 
-import "go.mongodb.org/mongo-driver/mongo"
+import (
+	"context"
+
+	"go.mongodb.org/mongo-driver/mongo"
+)
 
 type (
 	BookRepositoryService interface {
@@ -15,4 +19,10 @@ func NewBookRepository() BookRepositoryService {
 	return &bookRepository{}
 }
 
-// func BookMovie(pctx context.Context, req )
+func (r *bookRepository) ConnectBookingDb() *mongo.Database {
+	return r.db.Database("booking_db")
+}
+
+func (r *bookRepository) BuyTicket(pctx context.Context) {
+
+}
