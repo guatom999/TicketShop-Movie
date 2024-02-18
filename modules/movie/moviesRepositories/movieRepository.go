@@ -7,18 +7,18 @@ import (
 	"time"
 
 	"github.com/guatom999/TicketShop-Movie/modules/movie"
+	"github.com/guatom999/TicketShop-Movie/utils"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type (
 	MoviesRepositoryService interface {
 		InsertMovie(pctx context.Context, req *movie.Movie) error
-		FindOneMovie(pctx context.Context, req *movie.Movie) (*movie.MovieData, error)
-		FindAllMovie(pctx context.Context) ([]*movie.MovieData, error)
-		IsMovieAvaliable(pctx context.Context, req string) bool
+		FindOneMovie(pctx context.Context, title string) (*movie.Movie, error)
+		FindAllMovie(pctx context.Context, filter any) ([]*movie.MovieData, error)
+		FindMovieShowtime(pctx context.Context, title string) ([]*movie.MovieShowTimeRes, error)
+		// IsMovieAvaliable(pctx context.Context, req string) bool
 	}
 
 	moviesrepository struct {
@@ -77,7 +77,7 @@ func (r *moviesrepository) InsertMovie(pctx context.Context, req *movie.Movie) e
 // 	return true
 // }
 
-func (r *moviesrepository) FindOneMovie(pctx context.Context, req *movie.Movie) (*movie.MovieData, error) {
+func (r *moviesrepository) FindOneMovie(pctx context.Context, title string) (*movie.Movie, error) {
 
 	ctx, cancel := context.WithTimeout(pctx, time.Second*20)
 	defer cancel()
@@ -85,21 +85,23 @@ func (r *moviesrepository) FindOneMovie(pctx context.Context, req *movie.Movie) 
 	db := r.db.Database("movie_db")
 	col := db.Collection("movie")
 
-	col.FindOne()
+	result := new(movie.Movie)
 
-	return nil, nil
+	if err := col.FindOne(ctx, bson.M{"Title": title}).Decode(result); err != nil {
+		log.Printf("Error: FindOne Movie Failed:%s", err.Error())
+		return nil, errors.New("error: findone movie failed")
+	}
+
+	return result, nil
 }
 
-func (r *moviesrepository) FindAllMovie(pctx context.Context,
-) ([]*movie.MovieData, error) {
+func (r *moviesrepository) FindAllMovie(pctx context.Context, filter any) ([]*movie.MovieData, error) {
 
 	ctx, cancel := context.WithTimeout(pctx, time.Second*20)
 	defer cancel()
 
 	db := r.db.Database("movie_db")
 	col := db.Collection("movie")
-
-	filter := bson.D{}
 
 	cursor, err := col.Find(ctx, filter)
 	if err != nil {
@@ -119,49 +121,83 @@ func (r *moviesrepository) FindAllMovie(pctx context.Context,
 		}
 
 		results = append(results, &movie.MovieData{
-			MovieId:   result.Id.Hex(),
-			Title:     result.Title,
-			Price:     result.Price,
-			ImageUrl:  result.ImageUrl,
-			Avaliable: result.Avaliable,
+			MovieId:  result.Id.Hex(),
+			Title:    result.Title,
+			Price:    result.Price,
+			ImageUrl: result.ImageUrl,
 		})
 	}
 
 	return results, nil
 }
 
-func (r *moviesrepository) FindManyMovies(pctx context.Context, filter primitive.ObjectID, opts []*options.FindOptions) ([]*movie.MovieData, error) {
+func (r *moviesrepository) FindMovieShowtime(pctx context.Context, title string) ([]*movie.MovieShowTimeRes, error) {
 
 	ctx, cancel := context.WithTimeout(pctx, time.Second*20)
 	defer cancel()
 
 	db := r.db.Database("movie_db")
-	col := db.Collection("movie")
+	col := db.Collection("movie_available")
 
-	cur, err := col.Find(ctx, filter, opts...)
+	results := make([]*movie.MovieShowTimeRes, 0)
+
+	log.Println(utils.GetLocaltime())
+
+	cursor, err := col.Find(ctx, bson.M{"title": title})
 	if err != nil {
-		log.Printf("Error: Find All Movie Failed: %s", err.Error())
-		return make([]*movie.MovieData, 0), errors.New("error: find many item failed")
+		log.Printf("Error: FindOne Movie Failed:%s", err.Error())
+		return nil, errors.New("error: findone movie failed")
 	}
 
-	results := make([]*movie.MovieData, 0)
-
-	for cur.Next(ctx) {
-		result := new(movie.Movie)
-		if err := cur.Decode(result); err != nil {
-			log.Printf("Error: Find Many Movies Failed:%s", err.Error())
-			return make([]*movie.MovieData, 0), errors.New("error: find many movie failed")
+	for cursor.Next(ctx) {
+		result := new(movie.MovieAvaliable)
+		if err := cursor.Decode(result); err != nil {
+			log.Printf("Error: Decode FineMovieShowtime failed:%s", err)
+			return make([]*movie.MovieShowTimeRes, 0), errors.New("error: find movie showtime failed")
 		}
 
-		results = append(results, &movie.MovieData{
-			MovieId:   result.Id.Hex(),
-			Title:     result.Title,
-			Price:     result.Price,
-			ImageUrl:  result.ImageUrl,
-			Avaliable: result.Avaliable,
+		results = append(results, &movie.MovieShowTimeRes{
+			Title:    result.Title,
+			ShowTime: utils.GetStringTime(result.Showtime),
 		})
 
 	}
 
 	return results, nil
 }
+
+// func (r *moviesrepository) FindManyMovies(pctx context.Context, filter primitive.ObjectID, opts []*options.FindOptions) ([]*movie.MovieData, error) {
+
+// 	ctx, cancel := context.WithTimeout(pctx, time.Second*20)
+// 	defer cancel()
+
+// 	db := r.db.Database("movie_db")
+// 	col := db.Collection("movie")
+
+// 	cur, err := col.Find(ctx, filter, opts...)
+// 	if err != nil {
+// 		log.Printf("Error: Find All Movie Failed: %s", err.Error())
+// 		return make([]*movie.MovieData, 0), errors.New("error: find many item failed")
+// 	}
+
+// 	results := make([]*movie.MovieData, 0)
+
+// 	for cur.Next(ctx) {
+// 		result := new(movie.Movie)
+// 		if err := cur.Decode(result); err != nil {
+// 			log.Printf("Error: Find Many Movies Failed:%s", err.Error())
+// 			return make([]*movie.MovieData, 0), errors.New("error: find many movie failed")
+// 		}
+
+// 		results = append(results, &movie.MovieData{
+// 			MovieId:   result.Id.Hex(),
+// 			Title:     result.Title,
+// 			Price:     result.Price,
+// 			ImageUrl:  result.ImageUrl,
+// 			Avaliable: result.Avaliable,
+// 		})
+
+// 	}
+
+// 	return results, nil
+// }

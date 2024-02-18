@@ -15,4 +15,10 @@ type (
 	Seat struct {
 		Number string `bson:"number"`
 	}
+
+	PaymentReq struct {
+	}
+
+	PaymentRes struct {
+	}
 )

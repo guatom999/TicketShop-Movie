@@ -12,8 +12,10 @@ import (
 type (
 	MoviesHandlerService interface {
 		AddOneMovie(c echo.Context) error
+		FindOneMovie(c echo.Context) error
 		GetAllMovie(c echo.Context) error
 		TestReq(c echo.Context) error
+		FindMovieShowTime(c echo.Context) error
 	}
 
 	moviesHandler struct {
@@ -42,16 +44,45 @@ func (h *moviesHandler) AddOneMovie(c echo.Context) error {
 
 }
 
+func (h *moviesHandler) FindOneMovie(c echo.Context) error {
+
+	ctx := context.Background()
+
+	movieName := c.Param("title")
+
+	movie, err := h.moviesUseCase.FindOneMovie(ctx, movieName)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, movie)
+
+}
+
 func (h *moviesHandler) GetAllMovie(c echo.Context) error {
 
 	ctx := context.Background()
 
 	result, err := h.moviesUseCase.FindAllMovie(ctx)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, result)
+		return c.JSON(http.StatusInternalServerError, err)
 	}
 
 	return c.JSON(http.StatusOK, result)
+}
+
+func (h *moviesHandler) FindMovieShowTime(c echo.Context) error {
+
+	ctx := context.Background()
+
+	movieName := c.Param("title")
+
+	movies, err := h.moviesUseCase.FindMovieShowTime(ctx, movieName)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err)
+	}
+
+	return c.JSON(http.StatusOK, movies)
 }
 
 func (h *moviesHandler) TestReq(c echo.Context) error {

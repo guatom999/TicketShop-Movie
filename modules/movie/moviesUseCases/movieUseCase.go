@@ -9,6 +9,8 @@ import (
 
 	"github.com/guatom999/TicketShop-Movie/modules/movie"
 	"github.com/guatom999/TicketShop-Movie/modules/movie/moviesRepositories"
+	"github.com/guatom999/TicketShop-Movie/utils"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 type (
@@ -16,6 +18,8 @@ type (
 		AddOneMovie(pctx context.Context, req *movie.AddMovieReq) error
 		FindAllMovie(pctx context.Context) ([]*movie.MovieData, error)
 		TestReq(pctx context.Context) (string, error)
+		FindOneMovie(pctx context.Context, title string) (*movie.MovieShowCase, error)
+		FindMovieShowTime(pctx context.Context, title string) ([]*movie.MovieShowTimeRes, error)
 	}
 
 	moviesUseCase struct {
@@ -35,7 +39,6 @@ func (u *moviesUseCase) AddOneMovie(pctx context.Context, req *movie.AddMovieReq
 		ImageUrl:  req.ImageUrl,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
-		Avaliable: req.Avaliable,
 	}); err != nil {
 		return err
 	}
@@ -43,9 +46,28 @@ func (u *moviesUseCase) AddOneMovie(pctx context.Context, req *movie.AddMovieReq
 	return nil
 }
 
+// FindWithMoreCondition
+func (u *moviesUseCase) FindOneMovie(pctx context.Context, title string) (*movie.MovieShowCase, error) {
+
+	result, err := u.moviesRepo.FindOneMovie(pctx, title)
+	if err != nil {
+		return nil, err
+	}
+
+	return &movie.MovieShowCase{
+		Title:    result.Title,
+		Price:    result.Price,
+		ImageUrl: result.ImageUrl,
+	}, nil
+}
+
 func (u *moviesUseCase) FindAllMovie(pctx context.Context) ([]*movie.MovieData, error) {
 
-	result, err := u.moviesRepo.FindAllMovie(pctx)
+	filter := bson.D{}
+
+	filter = append(filter, bson.E{"out_of_theaters_at", bson.D{{"$gt", utils.GetLocaltime()}}})
+
+	result, err := u.moviesRepo.FindAllMovie(pctx, filter)
 	if err != nil {
 		return make([]*movie.MovieData, 0), nil
 	}
@@ -117,6 +139,16 @@ func (u *moviesUseCase) FindManyMovie(pctx context.Context, basePaginateUrl stri
 	// }, nil
 
 	return nil
+}
+
+func (u *moviesUseCase) FindMovieShowTime(pctx context.Context, title string) ([]*movie.MovieShowTimeRes, error) {
+
+	movies, err := u.moviesRepo.FindMovieShowtime(pctx, title)
+	if err != nil {
+		return make([]*movie.MovieShowTimeRes, 0), err
+	}
+
+	return movies, nil
 }
 
 func (u *moviesUseCase) TestReq(pctx context.Context) (string, error) {

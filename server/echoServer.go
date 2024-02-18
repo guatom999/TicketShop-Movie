@@ -57,6 +57,20 @@ func (s *server) gracefulShutdown(pctx context.Context, close <-chan os.Signal) 
 
 func (s *server) Start(pctx context.Context) {
 
+	// Request Timeout
+	s.app.Use(middleware.TimeoutWithConfig(middleware.TimeoutConfig{
+		Skipper:      middleware.DefaultSkipper,
+		ErrorMessage: "Error: Request Timeout",
+		Timeout:      time.Second * 10,
+	}))
+
+	//Cors
+	s.app.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		Skipper:      middleware.DefaultSkipper,
+		AllowOrigins: []string{"*"},
+		AllowMethods: []string{echo.GET, echo.POST, echo.PUT, echo.DELETE, echo.PATCH},
+	}))
+
 	s.app.Use(middleware.Logger())
 
 	close := make(chan os.Signal, 1)
