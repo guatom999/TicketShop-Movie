@@ -157,8 +157,9 @@ func (r *moviesrepository) FindMovieShowtime(pctx context.Context, title string)
 		}
 
 		results = append(results, &movie.MovieShowTimeRes{
-			Title:    result.Title,
-			ShowTime: utils.GetStringTime(result.Showtime),
+			Title:         result.Title,
+			ShowTime:      utils.GetStringTime(result.Showtime),
+			SeatAvailable: result.SeatAvailable,
 		})
 
 	}

@@ -58,13 +58,8 @@ func (r *bookRepository) ReserveSeat(pctx context.Context) {
 
 }
 
-// func (r *bookRepository) BuyTicket(pctx context.Context, title string) error {
+func (r *bookRepository) BuyTicket(pctx context.Context, title string) error {
 
-// 	if err := r.FindMovieIsAvaliable(title); err != nil {
-// 		log.Printf("Error: Cannot Buy")
-// 		return nil
-// 	}
+	return nil
 
-// 	return nil
-
-// }
+}

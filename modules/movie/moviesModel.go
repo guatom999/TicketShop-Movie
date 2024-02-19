@@ -30,8 +30,8 @@ type (
 	}
 
 	MovieShowTimeRes struct {
-		Title         string           `json:"title"`
-		ShowTime      string           `json:"show_time"`
-		SeatAvailable []*SeatAvailable `json:"seat_available"`
+		Title         string          `json:"title"`
+		ShowTime      string          `json:"show_time"`
+		SeatAvailable []SeatAvailable `json:"seat_available"`
 	}
 )
