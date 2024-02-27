@@ -27,6 +27,8 @@ func main() {
 		migrate.MovieMigrate(ctx, &cfg)
 	case "booking":
 		migrate.BookingMigrate(ctx, &cfg)
+	case "inventory":
+		migrate.InventoryMigrate(ctx, &cfg)
 	}
 
 }

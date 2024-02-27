@@ -16,6 +16,7 @@ type (
 		GetAllMovie(c echo.Context) error
 		TestReq(c echo.Context) error
 		FindMovieShowTime(c echo.Context) error
+		ReserveSeat(c echo.Context) error
 	}
 
 	moviesHandler struct {
@@ -83,6 +84,19 @@ func (h *moviesHandler) FindMovieShowTime(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, movies)
+}
+
+func (h *moviesHandler) ReserveSeat(c echo.Context) error {
+
+	ctx := context.Background()
+
+	input := make([]*movie.ReserveDetailReq, 0)
+
+	if err := h.moviesUseCase.ReserveSeat(ctx, input); err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, "test success")
 }
 
 func (h *moviesHandler) TestReq(c echo.Context) error {

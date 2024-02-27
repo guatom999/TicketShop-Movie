@@ -3,6 +3,7 @@ package moviesRepositories
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"time"
 
@@ -18,6 +19,7 @@ type (
 		FindOneMovie(pctx context.Context, title string) (*movie.Movie, error)
 		FindAllMovie(pctx context.Context, filter any) ([]*movie.MovieData, error)
 		FindMovieShowtime(pctx context.Context, title string) ([]*movie.MovieShowTimeRes, error)
+		UpdateSeatStatus(pctx context.Context, req *movie.ReserveDetailReq) error
 		// IsMovieAvaliable(pctx context.Context, req string) bool
 	}
 
@@ -165,6 +167,73 @@ func (r *moviesrepository) FindMovieShowtime(pctx context.Context, title string)
 	}
 
 	return results, nil
+}
+
+func (r *moviesrepository) UpdateSeatStatus(pctx context.Context, req *movie.ReserveDetailReq) error {
+
+	ctx, cancel := context.WithTimeout(pctx, time.Second*20)
+	defer cancel()
+
+	db := r.db.Database("movie_db")
+	col := db.Collection("movie_available")
+
+	result := new(movie.MovieAvaliable)
+
+	if err := col.FindOne(ctx, bson.M{"movie_id": req.MovieId}).Decode(result); err != nil {
+		log.Printf("Error: Find Seat Status Failed:%s", err.Error())
+		return errors.New("error: find seat status failed")
+	}
+	// req.SeatNo = "Z3"
+
+	for i, seat := range result.SeatAvailable {
+
+		if _, ok := seat[fmt.Sprint(req.SeatNo)]; ok {
+			if seat[req.SeatNo] {
+				log.Println("Update seat now")
+				result.SeatAvailable[i][req.SeatNo] = false
+				break
+			}
+		} else if i == (len(result.SeatAvailable) - 1) {
+			log.Println("error:no seat match")
+			return errors.New("error: no seat match")
+		}
+	}
+
+	updateResult, err := col.UpdateOne(ctx, bson.M{"movie_id": req.MovieId}, bson.M{"$set": result})
+	if err != nil {
+		log.Printf("Error: Update Seat Status Failed %v", err)
+		return errors.New("error: update seat status failed")
+	}
+
+	log.Printf("update status is :%v", updateResult)
+
+	return nil
+
+}
+
+func (r *moviesrepository) ReserveSeat(pctx context.Context, req *movie.ReserveDetailReq) error {
+
+	// ctx, cancel := context.WithTimeout(pctx, time.Second*20)
+	// defer cancel()
+
+	// db := r.db.Database("movie_db")
+	// col := db.Collection("movie_available")
+
+	// if !r.IsSeatAvailable(ctx, &movie.ReserveDetailReq{}) {
+	// 	log.Printf("Error: Seat is Not Available")
+	// 	return errors.New("errro: seat is not available")
+	// }
+
+	// col.UpdateOne(ctx, bson.M{"movie_id": req.MovieId}, bson.D{{"$set", bson.D{{"seat_available"}}}})
+
+	// col.UpdateOne(
+	// 	ctx,
+	// 	bson.M{"_id": utils.ConvertToObjectId(req.MovieId)},
+	// 	bson.M{"$set": bson.M{
+	// 		"seat_available":
+	// 	}})
+
+	return nil
 }
 
 // func (r *moviesrepository) FindManyMovies(pctx context.Context, filter primitive.ObjectID, opts []*options.FindOptions) ([]*movie.MovieData, error) {

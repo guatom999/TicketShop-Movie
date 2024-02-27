@@ -34,4 +34,9 @@ type (
 		ShowTime      string          `json:"show_time"`
 		SeatAvailable []SeatAvailable `json:"seat_available"`
 	}
+
+	ReserveDetailReq struct {
+		MovieId string `json:"movie_id"`
+		SeatNo  string `json:"seat_no"`
+	}
 )

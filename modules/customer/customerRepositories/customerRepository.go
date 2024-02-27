@@ -14,4 +14,4 @@ func NewCustomerRepository() CustomerRepositoryService {
 
 }
 
-// func AddPlayerTicket(pctx context.Context, req )
+// func (r *customerRepository) AddTicketCustomer(pctx context.Context, req *customer.)
