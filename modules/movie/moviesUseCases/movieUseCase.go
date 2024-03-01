@@ -35,11 +35,14 @@ func NewmoviesUseCase(moviesRepo moviesRepositories.MoviesRepositoryService) Mov
 func (u *moviesUseCase) AddOneMovie(pctx context.Context, req *movie.AddMovieReq) error {
 
 	if err := u.moviesRepo.InsertMovie(pctx, &movie.Movie{
-		Title:     req.Title,
-		Price:     req.Price,
-		ImageUrl:  req.ImageUrl,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		Title:           req.Title,
+		Price:           req.Price,
+		ImageUrl:        req.ImageUrl,
+		CreatedAt:       time.Now(),
+		UpdatedAt:       time.Now(),
+		Category:        "RomCom",
+		ReleaseAt:       utils.GetLocaltime(),
+		OutOfTheatersAt: utils.GetLocaltime().Add(time.Hour * 168),
 	}); err != nil {
 		return err
 	}
@@ -154,13 +157,10 @@ func (u *moviesUseCase) FindMovieShowTime(pctx context.Context, title string) ([
 
 func (u *moviesUseCase) ReserveSeat(pctx context.Context, req []*movie.ReserveDetailReq) error {
 
-	err := u.moviesRepo.UpdateSeatStatus(pctx, &movie.ReserveDetailReq{
-		MovieId: "test000000001",
-		SeatNo:  "D3",
-	})
-
-	if err != nil {
-		return err
+	for _, v := range req {
+		if err := u.moviesRepo.UpdateSeatStatus(pctx, v); err != nil {
+			return err
+		}
 	}
 
 	return nil

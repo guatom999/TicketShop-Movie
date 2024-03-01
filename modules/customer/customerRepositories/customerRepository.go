@@ -1,5 +1,9 @@
 package customerRepositories
 
+import (
+	"context"
+)
+
 type (
 	CustomerRepositoryService interface {
 	}
@@ -14,4 +18,14 @@ func NewCustomerRepository() CustomerRepositoryService {
 
 }
 
-// func (r *customerRepository) AddTicketCustomer(pctx context.Context, req *customer.)
+func (r *customerRepository) AddTicketCustomer(pctx context.Context) error {
+
+	// ctx, cancel := context.WithTimeout(pctx, time.Second*20)
+	// defer cancel()
+
+	// db := r.db.Database("movie_db")
+	// col := db.Collection("movie")
+
+	return nil
+
+}

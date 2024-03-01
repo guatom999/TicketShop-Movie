@@ -92,6 +92,10 @@ func (h *moviesHandler) ReserveSeat(c echo.Context) error {
 
 	input := make([]*movie.ReserveDetailReq, 0)
 
+	if err := c.Bind(&input); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+
 	if err := h.moviesUseCase.ReserveSeat(ctx, input); err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}

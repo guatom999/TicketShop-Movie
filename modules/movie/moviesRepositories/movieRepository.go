@@ -10,6 +10,7 @@ import (
 	"github.com/guatom999/TicketShop-Movie/modules/movie"
 	"github.com/guatom999/TicketShop-Movie/utils"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -18,7 +19,7 @@ type (
 		InsertMovie(pctx context.Context, req *movie.Movie) error
 		FindOneMovie(pctx context.Context, title string) (*movie.Movie, error)
 		FindAllMovie(pctx context.Context, filter any) ([]*movie.MovieData, error)
-		FindMovieShowtime(pctx context.Context, title string) ([]*movie.MovieShowTimeRes, error)
+		FindMovieShowtime(pctx context.Context, movieId string) ([]*movie.MovieShowTimeRes, error)
 		UpdateSeatStatus(pctx context.Context, req *movie.ReserveDetailReq) error
 		// IsMovieAvaliable(pctx context.Context, req string) bool
 	}
@@ -44,6 +45,59 @@ func (r *moviesrepository) InsertMovie(pctx context.Context, req *movie.Movie) e
 	if err != nil {
 		log.Printf("Error: Insert One Movie Failed")
 		return errors.New("error: insert one movie failed")
+	}
+
+	lastInsertId := result.InsertedID.(primitive.ObjectID)
+
+	col = db.Collection("movie_available")
+
+	// movieAvailableCount, err := col.CountDocuments(pctx, bson.M{})
+	// if err != nil {
+	// 	log.Printf("Error: Count Documents failed: %v", err)
+	// 	return errors.New("error: countDocuments failed")
+	// }
+
+	addMovieAvailable := func() []any {
+
+		datas := make([]any, 0)
+
+		for i := 0; i < 3; i++ {
+
+			data := movie.MovieAvaliable{
+				Movie_Id:  lastInsertId.Hex(),
+				Title:     req.Title,
+				CreatedAt: utils.GetLocaltime(),
+				UpdatedAt: utils.GetLocaltime(),
+				Showtime:  utils.SetSpecificTime(2024, 3, 2, 10+i, 30, 0),
+				SeatAvailable: []movie.SeatAvailable{
+					{"A1": true},
+					{"A2": true},
+					{"A3": true},
+					{"B1": true},
+					{"B2": true},
+					{"B3": true},
+					{"C1": true},
+					{"C2": true},
+					{"C3": true},
+					{"D1": true},
+					{"D2": true},
+					{"D3": true},
+				},
+			}
+
+			datas = append(datas, data)
+
+		}
+
+		return datas
+
+	}()
+
+	_, err = col.InsertMany(pctx, addMovieAvailable)
+
+	if err != nil {
+		log.Printf("Error: Count Documents failed: %v", err)
+		return errors.New("error: countDocuments failed")
 	}
 
 	log.Println("item id is", result.InsertedID)
@@ -113,8 +167,6 @@ func (r *moviesrepository) FindAllMovie(pctx context.Context, filter any) ([]*mo
 
 	results := make([]*movie.MovieData, 0)
 
-	log.Println("result is", results)
-
 	for cursor.Next(ctx) {
 		result := new(movie.Movie)
 		if err := cursor.Decode(result); err != nil {
@@ -133,7 +185,7 @@ func (r *moviesrepository) FindAllMovie(pctx context.Context, filter any) ([]*mo
 	return results, nil
 }
 
-func (r *moviesrepository) FindMovieShowtime(pctx context.Context, title string) ([]*movie.MovieShowTimeRes, error) {
+func (r *moviesrepository) FindMovieShowtime(pctx context.Context, movieId string) ([]*movie.MovieShowTimeRes, error) {
 
 	ctx, cancel := context.WithTimeout(pctx, time.Second*20)
 	defer cancel()
@@ -145,7 +197,7 @@ func (r *moviesrepository) FindMovieShowtime(pctx context.Context, title string)
 
 	log.Println(utils.GetLocaltime())
 
-	cursor, err := col.Find(ctx, bson.M{"title": title})
+	cursor, err := col.Find(ctx, bson.M{"movie_id": movieId})
 	if err != nil {
 		log.Printf("Error: FindOne Movie Failed:%s", err.Error())
 		return nil, errors.New("error: findone movie failed")
@@ -179,11 +231,10 @@ func (r *moviesrepository) UpdateSeatStatus(pctx context.Context, req *movie.Res
 
 	result := new(movie.MovieAvaliable)
 
-	if err := col.FindOne(ctx, bson.M{"movie_id": req.MovieId}).Decode(result); err != nil {
+	if err := col.FindOne(ctx, bson.M{"_id": utils.ConvertStringToObjectId(req.MovieId)}).Decode(result); err != nil {
 		log.Printf("Error: Find Seat Status Failed:%s", err.Error())
 		return errors.New("error: find seat status failed")
 	}
-	// req.SeatNo = "Z3"
 
 	for i, seat := range result.SeatAvailable {
 
@@ -193,13 +244,15 @@ func (r *moviesrepository) UpdateSeatStatus(pctx context.Context, req *movie.Res
 				result.SeatAvailable[i][req.SeatNo] = false
 				break
 			}
-		} else if i == (len(result.SeatAvailable) - 1) {
+		} else if {
+			
+		}else if i == (len(result.SeatAvailable) - 1) {
 			log.Println("error:no seat match")
 			return errors.New("error: no seat match")
 		}
 	}
 
-	updateResult, err := col.UpdateOne(ctx, bson.M{"movie_id": req.MovieId}, bson.M{"$set": result})
+	updateResult, err := col.UpdateOne(ctx, bson.M{"_id": utils.ConvertStringToObjectId(req.MovieId)}, bson.M{"$set": result})
 	if err != nil {
 		log.Printf("Error: Update Seat Status Failed %v", err)
 		return errors.New("error: update seat status failed")

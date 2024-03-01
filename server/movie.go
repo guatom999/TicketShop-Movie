@@ -13,12 +13,12 @@ func (s *server) MovieModule() {
 
 	movieRouter := s.app.Group("/movie")
 
-	movieRouter.POST("/add", movieHandler.AddOneMovie)
+	movieRouter.POST("/addmovie", movieHandler.AddOneMovie)
 	movieRouter.GET("/getallmovie", movieHandler.GetAllMovie)
 	movieRouter.GET("/getmovie/:title", movieHandler.FindOneMovie)
 	movieRouter.GET("/test", movieHandler.TestReq)
 	movieRouter.GET("/getmovieshowtime/:title", movieHandler.FindMovieShowTime)
 
 	//Test
-	movieRouter.GET("/testreserveseat", movieHandler.ReserveSeat)
+	movieRouter.POST("/testreserveseat", movieHandler.ReserveSeat)
 }
