@@ -21,15 +21,14 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: 123456
-  inventory-db:
+  customer-ticket-db:
     image: mongo
-    container_name: inventory-db
+    container_name: customer-ticket-db
     ports:
       - 27019:27017
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: 123456
-
   customer-db:
     image: mongo
     container_name: customer-db
