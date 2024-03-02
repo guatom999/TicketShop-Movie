@@ -243,10 +243,11 @@ func (r *moviesrepository) UpdateSeatStatus(pctx context.Context, req *movie.Res
 				log.Println("Update seat now")
 				result.SeatAvailable[i][req.SeatNo] = false
 				break
+			} else if !seat[fmt.Sprint(req.SeatNo)] {
+				log.Println("error:no seat match", seat[fmt.Sprint(req.SeatNo)])
+				return errors.New("error: seat already sold")
 			}
-		} else if {
-			
-		}else if i == (len(result.SeatAvailable) - 1) {
+		} else if i == (len(result.SeatAvailable) - 1) {
 			log.Println("error:no seat match")
 			return errors.New("error: no seat match")
 		}
