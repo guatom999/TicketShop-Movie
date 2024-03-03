@@ -29,6 +29,8 @@ func main() {
 		migrate.BookingMigrate(ctx, &cfg)
 	case "inventory":
 		migrate.InventoryMigrate(ctx, &cfg)
+	case "customer":
+		migrate.CustomerMigrate(ctx, &cfg)
 	}
 
 }
