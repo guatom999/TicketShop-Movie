@@ -14,13 +14,13 @@ func InventoryMigrate(pctx context.Context, cfg *config.Config) {
 	db := database.DbConn(pctx, cfg).Database("inventory_db")
 	defer db.Client().Disconnect(pctx)
 
-	col := db.Collection("customer_inventory")
+	col := db.Collection("ticket_inventory")
 
 	documents := func() []any {
 		mockDatas := []inventory.Inventory{
 			{
 				CustomerId: "user0001",
-				MovieId:    "test000000001",
+				TicketId:   "Ticket0001",
 			},
 		}
 
