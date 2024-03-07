@@ -25,12 +25,15 @@ func NewTicketUseCase(ticketRepo ticketRepositories.TicketRepositoryService) Tic
 
 func (u *ticketUseCase) AddCustomerTicket(pctx context.Context, req *ticket.AddTikcetReq) error {
 
-	if err := u.ticketRepo.AddCustomerTicket(pctx, &ticket.Ticket{
+	result, err := u.ticketRepo.AddCustomerTicket(pctx, &ticket.Ticket{
 		MovieId:    req.MovidId,
 		CustomerId: req.CustomerId,
-	}); err != nil {
+	})
+	if err != nil {
 		return nil
 	}
+
+	_ = result
 
 	return nil
 
