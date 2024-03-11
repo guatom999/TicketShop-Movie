@@ -2,6 +2,7 @@ package inventoryRepositories
 
 import (
 	"context"
+	"time"
 
 	"github.com/guatom999/TicketShop-Movie/modules/inventory"
 )
@@ -20,11 +21,8 @@ func NewInventoryRepository() InventoryRepositoryService {
 
 func (r *inventoryRepository) FindCustomerTicket(pctx context.Context, customerID string) ([]*inventory.Inventory, error) {
 
-	// ctx, cancel := context.WithTimeout(pctx, time.Second*20)
-	// defer cancel()
-
-	// db := r.db.Database("inventory_db")
-	// col := db.Collection("ticket_inventory")
+	_, cancel := context.WithTimeout(pctx, time.Second*20)
+	defer cancel()
 
 	return nil, nil
 

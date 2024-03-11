@@ -2,6 +2,7 @@ package ticketHandlers
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/guatom999/TicketShop-Movie/modules/ticket"
@@ -11,6 +12,7 @@ import (
 
 type (
 	TicketHandlerService interface {
+		AddCustomerTicket(c echo.Context) error
 	}
 
 	ticketHandler struct {
@@ -32,9 +34,10 @@ func (h *ticketHandler) AddCustomerTicket(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "bad req")
 	}
 
-	if err := h.ticketUseCase.AddCustomerTicket(ctx, req); err != nil {
+	result, err := h.ticketUseCase.AddCustomerTicket(ctx, req)
+	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 
-	return c.JSON(http.StatusOK, "Add Customer Ticket Successful")
+	return c.JSON(http.StatusOK, fmt.Sprintf("add ticket success %s", result.Hex()))
 }

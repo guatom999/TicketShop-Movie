@@ -16,9 +16,11 @@ func (s *server) MovieModule() {
 	movieRouter.POST("/addmovie", movieHandler.AddOneMovie)
 	movieRouter.GET("/getallmovie", movieHandler.GetAllMovie)
 	movieRouter.GET("/getmovie/:title", movieHandler.FindOneMovie)
-	movieRouter.GET("/test", movieHandler.TestReq)
-	movieRouter.GET("/getmovieshowtime/:title", movieHandler.FindMovieShowTime)
+	movieRouter.GET("/getmovieshowtime/:movieid", movieHandler.FindMovieShowTime)
 
 	//Test
-	movieRouter.POST("/testreserveseat", movieHandler.ReserveSeat)
+	movieRouter.POST("/reserveseat", movieHandler.ReserveSeat)
+
+	movieRouter.GET("/test", movieHandler.TestReq)
+
 }

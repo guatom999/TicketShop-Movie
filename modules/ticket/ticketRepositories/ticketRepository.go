@@ -13,7 +13,7 @@ import (
 
 type (
 	TicketRepositoryService interface {
-		AddCustomerTicket(pctx context.Context, req *ticket.Ticket) (primitive.ObjectID, error)
+		AddTicket(pctx context.Context, req *ticket.Ticket) (primitive.ObjectID, error)
 	}
 
 	ticketRepository struct {
@@ -27,7 +27,7 @@ func NewTicketRepository(db *mongo.Client) TicketRepositoryService {
 	}
 }
 
-func (r *ticketRepository) AddCustomerTicket(pctx context.Context, req *ticket.Ticket) (primitive.ObjectID, error) {
+func (r *ticketRepository) AddTicket(pctx context.Context, req *ticket.Ticket) (primitive.ObjectID, error) {
 
 	ctx, cancel := context.WithTimeout(pctx, time.Second*20)
 	defer cancel()

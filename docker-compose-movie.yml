@@ -45,7 +45,14 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: 123456
-
+  payment-ticket-db:
+    image: mongo
+    container_name: payment-ticket-db
+    ports:
+      - 27022:27017
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: 123456
 
 # services:
 #   postgres:

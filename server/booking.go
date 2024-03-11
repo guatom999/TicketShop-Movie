@@ -18,8 +18,8 @@ func (s *server) BookingModule() {
 
 	bookingRouter := s.app.Group("/booking")
 
-	bookingRouter.GET("/booking", func(c echo.Context) error {
-		return c.JSON(http.StatusOK, "")
+	bookingRouter.GET("/test", func(c echo.Context) error {
+		return c.JSON(http.StatusOK, "Test Success")
 	})
 
 }

@@ -30,8 +30,9 @@ func TicketMigrate(pctx context.Context, cfg *config.Config) {
 	documents := func() []any {
 		mockdatas := []*ticket.Ticket{
 			{
-				MovieId:    "65e1598baef8141ae9234cdb",
+				MovieId:    "65ecc8b289430838d51441a2",
 				CustomerId: "65e8a18968027287072e87dd",
+				Seat:       "A1",
 			},
 		}
 

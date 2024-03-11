@@ -3,12 +3,11 @@ package moviesUseCases
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
-	"net/http"
 	"time"
 
 	"github.com/guatom999/TicketShop-Movie/modules/movie"
 	"github.com/guatom999/TicketShop-Movie/modules/movie/moviesRepositories"
+	"github.com/guatom999/TicketShop-Movie/pkg/rest"
 	"github.com/guatom999/TicketShop-Movie/utils"
 	"go.mongodb.org/mongo-driver/bson"
 )
@@ -170,25 +169,14 @@ func (u *moviesUseCase) TestReq(pctx context.Context) (string, error) {
 
 	url := "http://localhost:8099/booking/test"
 
-	client := &http.Client{
-		Timeout: 10 * time.Second,
-	}
-
-	resp, err := client.Get(url)
+	res, err := rest.Request(url)
 	if err != nil {
-		fmt.Println("Error sending GET request:", err)
-		return "", err
-	}
-	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Println("Error reading response body:", err)
+		fmt.Println("Error: Error is ", res)
 		return "", err
 	}
 
-	fmt.Println("Response status code:", resp.StatusCode)
-	fmt.Println("Response body:", string(body)) // Assuming JSON response
+	fmt.Println("Response body:", res)
 
-	return string(body), nil
+	return res, nil
 }

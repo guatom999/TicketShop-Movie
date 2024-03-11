@@ -76,7 +76,7 @@ func (h *moviesHandler) FindMovieShowTime(c echo.Context) error {
 
 	ctx := context.Background()
 
-	movieName := c.Param("title")
+	movieName := c.Param("movieid")
 
 	movies, err := h.moviesUseCase.FindMovieShowTime(ctx, movieName)
 	if err != nil {
