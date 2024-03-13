@@ -11,8 +11,10 @@ func (s *server) TicketModule() {
 	ticketUseCase := ticketUseCases.NewTicketUseCase(ticketRepo)
 	ticketHandler := ticketHandlers.NewTicketHandler(ticketUseCase)
 
-	tikcetRouter := s.app.Group("/ticket")
+	ticketRouter := s.app.Group("/ticket")
 
-	tikcetRouter.POST("/add", ticketHandler.AddCustomerTicket)
+	ticketRouter.POST("/add", ticketHandler.AddCustomerTicket)
+
+	ticketRouter.GET("/:customer_id", ticketHandler.FindCustomerTicket)
 
 }

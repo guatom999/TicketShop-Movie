@@ -13,6 +13,7 @@ import (
 type (
 	TicketHandlerService interface {
 		AddCustomerTicket(c echo.Context) error
+		FindCustomerTicket(c echo.Context) error
 	}
 
 	ticketHandler struct {
@@ -40,4 +41,18 @@ func (h *ticketHandler) AddCustomerTicket(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, fmt.Sprintf("add ticket success %s", result.Hex()))
+}
+
+func (h *ticketHandler) FindCustomerTicket(c echo.Context) error {
+
+	ctx := context.Background()
+
+	customerId := c.Param("customer_id")
+
+	result, err := h.ticketUseCase.FindCustomerTicket(ctx, customerId)
+	if err != nil {
+		return c.JSON(http.StatusBadGateway, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, result)
 }
