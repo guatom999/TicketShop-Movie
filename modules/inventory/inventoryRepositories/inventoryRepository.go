@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/guatom999/TicketShop-Movie/modules/inventory"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type (
@@ -12,11 +13,12 @@ type (
 	}
 
 	inventoryRepository struct {
+		db *mongo.Client
 	}
 )
 
-func NewInventoryRepository() InventoryRepositoryService {
-	return &inventoryRepository{}
+func NewInventoryRepository(db *mongo.Client) InventoryRepositoryService {
+	return &inventoryRepository{db: db}
 }
 
 func (r *inventoryRepository) FindCustomerTicket(pctx context.Context, customerID string) ([]*inventory.Inventory, error) {

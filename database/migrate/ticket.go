@@ -8,6 +8,7 @@ import (
 	"github.com/guatom999/TicketShop-Movie/config"
 	"github.com/guatom999/TicketShop-Movie/database"
 	"github.com/guatom999/TicketShop-Movie/modules/ticket"
+	"github.com/guatom999/TicketShop-Movie/utils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -33,6 +34,12 @@ func TicketMigrate(pctx context.Context, cfg *config.Config) {
 				MovieId:    "65ecc8b289430838d51441a2",
 				CustomerId: "65e8a18968027287072e87dd",
 				Seat:       "A1",
+				MovieName:  "FRIEREN",
+				Date:       "14/3/2024",
+				Time:       "15.30",
+				Price:      160,
+				CreatedAt:  utils.GetLocaltime(),
+				UpdatedAt:  utils.GetLocaltime(),
 			},
 		}
 
