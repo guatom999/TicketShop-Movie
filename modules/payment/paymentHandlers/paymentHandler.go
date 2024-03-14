@@ -1,6 +1,7 @@
 package paymentHandler
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/guatom999/TicketShop-Movie/config"
@@ -29,7 +30,9 @@ func NewPaymentHanlder(cfg *config.Config, paymentUseCase paymentUseCases.Paymen
 
 func (h *paymentHandler) BuyTicket(c echo.Context) error {
 
-	// ctx := context.Background()
+	ctx := context.Background()
+
+	_ = ctx
 
 	req := new(payment.MovieBuyReq)
 

@@ -8,6 +8,7 @@ import (
 
 type (
 	PaymentRepositoryService interface {
+		BuyItem(pctx context.Context) error
 	}
 
 	paymentRepository struct {
@@ -20,5 +21,6 @@ func NewPaymentRepository(db *mongo.Client) PaymentRepositoryService {
 }
 
 func (r *paymentRepository) BuyItem(pctx context.Context) error {
+
 	return nil
 }
