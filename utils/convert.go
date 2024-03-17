@@ -12,3 +12,7 @@ func ConvertObjectIdToString(id primitive.ObjectID) string {
 
 	return objectString
 }
+
+func EncodeMessage(obj any) []byte {
+	return []byte(obj.(string))
+}

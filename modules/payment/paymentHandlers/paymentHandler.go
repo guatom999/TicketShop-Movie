@@ -32,13 +32,15 @@ func (h *paymentHandler) BuyTicket(c echo.Context) error {
 
 	ctx := context.Background()
 
-	_ = ctx
-
 	req := new(payment.MovieBuyReq)
 
 	if err := c.Bind(req); err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
 
-	return nil
+	if err := h.paymentUseCase.BuyTicket(ctx, h.cfg, req); err != nil {
+		return c.JSON(http.StatusInternalServerError, err)
+	}
+
+	return c.JSON(http.StatusOK, "Buy Ticket Success")
 }
