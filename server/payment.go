@@ -6,7 +6,7 @@ import (
 	"github.com/guatom999/TicketShop-Movie/modules/payment/paymentUseCases"
 )
 
-func (s *server) PaymentModules() {
+func (s *server) PaymentModule() {
 	paymentRepo := paymentRepositories.NewPaymentRepository(s.db)
 	paymentUseCase := paymentUseCases.NewPaymentUseCase(paymentRepo)
 	paymentHandler := paymentHandler.NewPaymentHanlder(s.cfg, paymentUseCase)

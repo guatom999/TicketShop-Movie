@@ -47,6 +47,8 @@ func main() {
 		migrate.CustomerMigrate(ctx, &cfg)
 	case "ticket":
 		migrate.TicketMigrate(ctx, &cfg)
+	case "payment":
+		migrate.PaymentMigrate(ctx, &cfg)
 	}
 
 }
