@@ -11,7 +11,9 @@ import (
 	"github.com/guatom999/TicketShop-Movie/pkg/queue"
 	"github.com/guatom999/TicketShop-Movie/utils"
 	"github.com/labstack/gommon/log"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"github.com/segmentio/kafka-go"
 )
@@ -20,6 +22,8 @@ type (
 	PaymentRepositoryService interface {
 		// ReserveSeat(pctx context.Context) error
 		ReserveSeat(pctx context.Context, cfg *config.Config, req *payment.MovieBuyReq) error
+		// GetOffset(pctx context.Context) (int64 ,error)
+		UpsertOfset(pctx context.Context, offset int64) error
 	}
 
 	paymentRepository struct {
@@ -31,7 +35,7 @@ func NewPaymentRepository(db *mongo.Client) PaymentRepositoryService {
 	return &paymentRepository{db: db}
 }
 
-func PaymentConsumer(pctx context.Context, cfg *config.Config) *kafka.Conn {
+func PaymentConsumer(pctx context.Context, cfg *config.Config, topic string) *kafka.Conn {
 	conn := queue.KafkaConn(cfg)
 	fmt.Println("kafka connect is success")
 
@@ -54,33 +58,39 @@ func PaymentConsumer(pctx context.Context, cfg *config.Config) *kafka.Conn {
 
 }
 
+func (r *paymentRepository) UpsertOfset(pctx context.Context, offset int64) error {
+
+	ctx, cancel := context.WithTimeout(pctx, time.Second*30)
+	defer cancel()
+
+	db := r.db.Database("payment_db")
+	col := db.Collection("payment_queue")
+
+	result, err := col.UpdateOne(ctx, bson.M{}, bson.M{"$set": bson.M{"offset": offset}}, options.Update().SetUpsert(true))
+	if err != nil {
+		log.Printf("Error: Update Upsert Offset Failed %s", err.Error())
+		return errors.New("error: update offset failed")
+	}
+
+	fmt.Println("Result is", result)
+
+	return nil
+
+}
+
 func (r *paymentRepository) ReserveSeat(pctx context.Context, cfg *config.Config, req *payment.MovieBuyReq) error {
 
 	ctx, cancel := context.WithTimeout(pctx, time.Second*10)
 	defer cancel()
 
-	conn := PaymentConsumer(ctx, cfg)
+	conn := PaymentConsumer(ctx, cfg, "buy")
 
-	message := []kafka.Message{}
-
-	message = append(message, kafka.Message{
+	message := kafka.Message{
 		Value: utils.EncodeMessage(req),
-	})
-
-	// messages := func() []kafka.Message {
-
-	// 	datas := make([]kafka.Message{}, 0)
-
-	// 	for _, data := range req {
-	// 		datas = append(datas, data)
-	// 	}
-
-	// 	return datas
-
-	// }()
+	}
 
 	conn.SetReadDeadline(time.Now().Add(10 * time.Second))
-	_, err := conn.WriteMessages(message...)
+	_, err := conn.WriteMessages(message)
 	if err != nil {
 		log.Fatal("failed to write messages:", err)
 		return errors.New("error: failed to send message")

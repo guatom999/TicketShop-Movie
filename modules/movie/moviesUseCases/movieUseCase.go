@@ -17,7 +17,7 @@ type (
 		AddOneMovie(pctx context.Context, req *movie.AddMovieReq) error
 		FindAllMovie(pctx context.Context) ([]*movie.MovieData, error)
 		TestReq(pctx context.Context) (string, error)
-		FindOneMovie(pctx context.Context, title string) (*movie.MovieShowCase, error)
+		FindOneMovie(pctx context.Context, movieId string) (*movie.MovieShowCase, error)
 		FindMovieShowTime(pctx context.Context, title string) ([]*movie.MovieShowTimeRes, error)
 		ReserveSeat(pctx context.Context, req []*movie.ReserveDetailReq) error
 	}
@@ -50,9 +50,9 @@ func (u *moviesUseCase) AddOneMovie(pctx context.Context, req *movie.AddMovieReq
 }
 
 // FindWithMoreCondition
-func (u *moviesUseCase) FindOneMovie(pctx context.Context, title string) (*movie.MovieShowCase, error) {
+func (u *moviesUseCase) FindOneMovie(pctx context.Context, movieId string) (*movie.MovieShowCase, error) {
 
-	result, err := u.moviesRepo.FindOneMovie(pctx, title)
+	result, err := u.moviesRepo.FindOneMovie(pctx, movieId)
 	if err != nil {
 		return nil, err
 	}

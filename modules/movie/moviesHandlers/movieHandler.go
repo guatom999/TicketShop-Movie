@@ -49,7 +49,7 @@ func (h *moviesHandler) FindOneMovie(c echo.Context) error {
 
 	ctx := context.Background()
 
-	movieName := c.Param("title")
+	movieName := c.Param("movie_id")
 
 	movie, err := h.moviesUseCase.FindOneMovie(ctx, movieName)
 	if err != nil {

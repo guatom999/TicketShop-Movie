@@ -89,6 +89,8 @@ func (s *server) Start(pctx context.Context) {
 		s.TicketModule()
 	case "inventory":
 		s.InventoryModule()
+	case "payment":
+		s.PaymentModule()
 	}
 
 	if err := s.app.Start(fmt.Sprintf(":%d", s.cfg.App.Port)); err != nil && err != http.ErrServerClosed {

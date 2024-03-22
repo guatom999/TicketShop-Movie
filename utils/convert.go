@@ -1,6 +1,11 @@
 package utils
 
-import "go.mongodb.org/mongo-driver/bson/primitive"
+import (
+	"encoding/json"
+	"log"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
 
 func ConvertStringToObjectId(id string) primitive.ObjectID {
 	objectId, _ := primitive.ObjectIDFromHex(id)
@@ -14,5 +19,12 @@ func ConvertObjectIdToString(id primitive.ObjectID) string {
 }
 
 func EncodeMessage(obj any) []byte {
-	return []byte(obj.(string))
+
+	raw, err := json.Marshal(obj)
+	if err != nil {
+		log.Printf("Error: Marshal Failed %s", err.Error())
+		return nil
+	}
+
+	return raw
 }

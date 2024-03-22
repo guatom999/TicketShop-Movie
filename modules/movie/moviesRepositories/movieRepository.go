@@ -17,7 +17,7 @@ import (
 type (
 	MoviesRepositoryService interface {
 		InsertMovie(pctx context.Context, req *movie.Movie) error
-		FindOneMovie(pctx context.Context, title string) (*movie.Movie, error)
+		FindOneMovie(pctx context.Context, movieId string) (*movie.Movie, error)
 		FindAllMovie(pctx context.Context, filter any) ([]*movie.MovieData, error)
 		FindMovieShowtime(pctx context.Context, movieId string) ([]*movie.MovieShowTimeRes, error)
 		UpdateSeatStatus(pctx context.Context, req *movie.ReserveDetailReq) error
@@ -133,7 +133,7 @@ func (r *moviesrepository) InsertMovie(pctx context.Context, req *movie.Movie) e
 // 	return true
 // }
 
-func (r *moviesrepository) FindOneMovie(pctx context.Context, title string) (*movie.Movie, error) {
+func (r *moviesrepository) FindOneMovie(pctx context.Context, movieId string) (*movie.Movie, error) {
 
 	ctx, cancel := context.WithTimeout(pctx, time.Second*20)
 	defer cancel()
@@ -143,7 +143,7 @@ func (r *moviesrepository) FindOneMovie(pctx context.Context, title string) (*mo
 
 	result := new(movie.Movie)
 
-	if err := col.FindOne(ctx, bson.M{"Title": title}).Decode(result); err != nil {
+	if err := col.FindOne(ctx, bson.M{"_id": utils.ConvertStringToObjectId(movieId)}).Decode(result); err != nil {
 		log.Printf("Error: FindOne Movie Failed:%s", err.Error())
 		return nil, errors.New("error: findone movie failed")
 	}
