@@ -7,9 +7,9 @@ import (
 	"github.com/segmentio/kafka-go"
 )
 
-func KafkaConn(cfg *config.Config) *kafka.Conn {
+func KafkaConn(cfg *config.Config, topic string) *kafka.Conn {
 
-	conn, err := kafka.DialLeader(context.Background(), "tcp", cfg.Kafka.Url, cfg.Kafka.Topic, 0)
+	conn, err := kafka.DialLeader(context.Background(), "tcp", cfg.Kafka.Url, topic, 0)
 	if err != nil {
 		panic(err.Error())
 	}

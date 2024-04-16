@@ -2,7 +2,7 @@ package rest
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"time"
 )
@@ -20,7 +20,9 @@ func Request(url string) (string, error) {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
+
+	fmt.Println("body is", body)
 	if err != nil {
 		fmt.Println("Error reading response body:", err)
 		return "", err

@@ -13,6 +13,7 @@ import (
 type (
 	PaymentHandlerService interface {
 		BuyTicket(c echo.Context) error
+		// CheckOutWithCreditCard(c echo.Context) error
 	}
 
 	paymentHandler struct {
@@ -44,3 +45,21 @@ func (h *paymentHandler) BuyTicket(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, "Buy Ticket Success")
 }
+
+// func (h *paymentHandler) CheckOutWithCreditCard(c echo.Context) error {
+
+// 	ctx := context.Background()
+
+// 	req := new(payment.CheckOutWithCreditCard)
+
+// 	if err := c.Bind(req); err != nil {
+// 		fmt.Printf("Error: error is %s", err.Error())
+// 		return c.JSON(http.StatusBadRequest, "omise payload failed")
+// 	}
+
+// 	if err := h.paymentUseCase.CheckOutWithCreditCard(ctx, req); err != nil {
+// 		return c.JSON(http.StatusInternalServerError, err.Error())
+// 	}
+
+// 	return c.JSON(http.StatusOK, "testOmiseSuccess")
+// }

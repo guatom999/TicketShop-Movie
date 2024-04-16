@@ -13,6 +13,7 @@ import (
 	"github.com/guatom999/TicketShop-Movie/config"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/omise/omise-go"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -22,20 +23,23 @@ type (
 	}
 
 	server struct {
-		app *echo.Echo
-		db  *mongo.Client
-		cfg *config.Config
+		app   *echo.Echo
+		db    *mongo.Client
+		cfg   *config.Config
+		omise *omise.Client
 	}
 )
 
 func NewEchoServer(
 	db *mongo.Client,
 	cfg *config.Config,
+	omise *omise.Client,
 ) Server {
 	return &server{
-		app: echo.New(),
-		db:  db,
-		cfg: cfg,
+		app:   echo.New(),
+		db:    db,
+		cfg:   cfg,
+		omise: omise,
 	}
 }
 

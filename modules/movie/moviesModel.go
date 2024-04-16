@@ -8,6 +8,9 @@ type (
 		Avaliable int     `json:"avaliable"`
 	}
 
+	AddMovieShowtime struct {
+	}
+
 	MovieData struct {
 		MovieId   string  `json:"movie_id"`
 		Title     string  `json:"title"`
@@ -30,6 +33,7 @@ type (
 	}
 
 	MovieShowTimeRes struct {
+		Movie_id      string          `json:"movie_id"`
 		Title         string          `json:"title"`
 		ShowTime      string          `json:"show_time"`
 		SeatAvailable []SeatAvailable `json:"seat_available"`

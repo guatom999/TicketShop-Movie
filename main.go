@@ -7,6 +7,7 @@ import (
 
 	"github.com/guatom999/TicketShop-Movie/config"
 	"github.com/guatom999/TicketShop-Movie/database"
+	"github.com/guatom999/TicketShop-Movie/pkg/opn"
 	"github.com/guatom999/TicketShop-Movie/server"
 )
 
@@ -26,6 +27,8 @@ func main() {
 
 	defer db.Disconnect(ctx)
 
-	server.NewEchoServer(db, &cfg).Start(ctx)
+	omiseClient := opn.OmiseConn(&cfg)
+
+	server.NewEchoServer(db, &cfg, omiseClient).Start(ctx)
 
 }

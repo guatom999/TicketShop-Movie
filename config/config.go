@@ -13,6 +13,7 @@ type (
 		Db    Db
 		Jwt   Jwt
 		Kafka Kafka
+		Omise Omise
 	}
 
 	App struct {
@@ -35,6 +36,11 @@ type (
 	Kafka struct {
 		Url   string
 		Topic string
+	}
+
+	Omise struct {
+		PublicKey string
+		SecretKey string
 	}
 )
 
@@ -72,6 +78,10 @@ func GetConfig(path string) Config {
 			Url:   viper.GetString("KAFKA_URL"),
 			Topic: viper.GetString("KAFKA_API_KEY"),
 		},
+		Omise: Omise{
+			PublicKey: viper.GetString("OMISE_PUBLIC_KEY"),
+			SecretKey: viper.GetString("OMISE_SECRET_KEY"),
+		},
 	}
 }
 
@@ -107,6 +117,11 @@ func GetMigrateConfig(path string) Config {
 		Kafka: Kafka{
 			Url:   viper.GetString("KAFKA_URL"),
 			Topic: viper.GetString("KAFKA_API_KEY"),
+		},
+
+		Omise: Omise{
+			PublicKey: viper.GetString("OMISE_PUBLIC_KEY"),
+			SecretKey: viper.GetString("OMISE_SECRET_KEY"),
 		},
 	}
 }

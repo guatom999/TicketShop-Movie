@@ -8,7 +8,7 @@ import (
 
 func (s *server) PaymentModule() {
 	paymentRepo := paymentRepositories.NewPaymentRepository(s.db)
-	paymentUseCase := paymentUseCases.NewPaymentUseCase(paymentRepo)
+	paymentUseCase := paymentUseCases.NewPaymentUseCase(paymentRepo, s.cfg, s.omise)
 	paymentHandler := paymentHandler.NewPaymentHanlder(s.cfg, paymentUseCase)
 
 	// _ = paymentHandler
@@ -16,5 +16,6 @@ func (s *server) PaymentModule() {
 	router := s.app.Group("/payment")
 
 	router.POST("/buyticket", paymentHandler.BuyTicket)
+	// router.POST("/checkoutwithcreditcard", paymentHandler.CheckOutWithCreditCard)
 
 }

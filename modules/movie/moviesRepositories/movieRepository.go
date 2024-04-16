@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"math"
 	"time"
 
 	"github.com/guatom999/TicketShop-Movie/modules/movie"
@@ -61,14 +62,16 @@ func (r *moviesrepository) InsertMovie(pctx context.Context, req *movie.Movie) e
 
 		datas := make([]any, 0)
 
-		for i := 0; i < 3; i++ {
+		for i := 0; i < 10; i++ {
 
 			data := movie.MovieAvaliable{
 				Movie_Id:  lastInsertId.Hex(),
 				Title:     req.Title,
 				CreatedAt: utils.GetLocaltime(),
-				UpdatedAt: utils.GetLocaltime(),
-				Showtime:  utils.SetSpecificTime(2024, 3, 2, 10+i, 30, 0),
+				UpdatedAt: func() time.Time {
+					return utils.GetLocaltime()
+				}(),
+				Showtime: utils.SetSpecificTime(2024, 3, 2+int(math.Floor(float64(i)/2)), 10+i, 30, 0),
 				SeatAvailable: []movie.SeatAvailable{
 					{"A1": true},
 					{"A2": true},
@@ -105,6 +108,17 @@ func (r *moviesrepository) InsertMovie(pctx context.Context, req *movie.Movie) e
 	return nil
 
 }
+
+// func (r *moviesrepository) InsertMovieShowDate(pctx context.Context, movieId string, req []*movie.AddMovieShowtime) error {
+
+// 	ctx, cancel := context.WithTimeout(pctx, time.Second*20)
+// 	defer cancel()
+
+// 	db := r.db.Database("movie_db")
+// 	col := db.Collection("movie")
+
+// 	return nil
+// }
 
 // func (r *moviesrepository) IsMovieAvaliable(pctx context.Context, req string) bool {
 
@@ -211,6 +225,7 @@ func (r *moviesrepository) FindMovieShowtime(pctx context.Context, movieId strin
 		}
 
 		results = append(results, &movie.MovieShowTimeRes{
+			Movie_id:      result.Id.Hex(),
 			Title:         result.Title,
 			ShowTime:      utils.GetStringTime(result.Showtime),
 			SeatAvailable: result.SeatAvailable,
