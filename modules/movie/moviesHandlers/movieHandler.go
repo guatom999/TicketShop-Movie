@@ -88,7 +88,7 @@ func (h *moviesHandler) FindMovieShowTime(c echo.Context) error {
 
 func (h *moviesHandler) ReserveSeat(c echo.Context) error {
 
-	ctx := context.Background()
+	// ctx := context.Background()
 
 	input := make([]*movie.ReserveDetailReq, 0)
 
@@ -96,9 +96,9 @@ func (h *moviesHandler) ReserveSeat(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
 
-	if err := h.moviesUseCase.ReserveSeat(ctx, input); err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
-	}
+	// if err := h.moviesUseCase.ReserveSeat(ctx, input); err != nil {
+	// 	return c.JSON(http.StatusInternalServerError, err.Error())
+	// }
 
 	return c.JSON(http.StatusOK, "test success")
 }

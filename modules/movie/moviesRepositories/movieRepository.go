@@ -246,25 +246,25 @@ func (r *moviesrepository) UpdateSeatStatus(pctx context.Context, req *movie.Res
 
 	result := new(movie.MovieAvaliable)
 
+	fmt.Println("req.MovieId is ", req.MovieId)
+
 	if err := col.FindOne(ctx, bson.M{"_id": utils.ConvertStringToObjectId(req.MovieId)}).Decode(result); err != nil {
 		log.Printf("Error: Find Seat Status Failed:%s", err.Error())
 		return errors.New("error: find seat status failed")
 	}
 
-	for i, seat := range result.SeatAvailable {
-
-		if _, ok := seat[fmt.Sprint(req.SeatNo)]; ok {
-			if seat[req.SeatNo] {
-				log.Println("Update seat now")
-				result.SeatAvailable[i][req.SeatNo] = false
+	for _, reserveSeatNo := range req.SeatNo {
+		for x, seatAvailable := range result.SeatAvailable {
+			fmt.Println("index seat is", x)
+			if _, ok := seatAvailable[reserveSeatNo]; ok {
+				fmt.Println("Gore Buy Dai Na")
+				result.SeatAvailable[x][reserveSeatNo] = false
 				break
-			} else if !seat[fmt.Sprint(req.SeatNo)] {
-				log.Println("error:no seat match", seat[fmt.Sprint(req.SeatNo)])
-				return errors.New("error: seat already sold")
+			} else if x == (len(result.SeatAvailable) - 1) {
+				fmt.Println("THis Csae")
+				log.Println("error:no seat match")
+				return errors.New("error: no seat match")
 			}
-		} else if i == (len(result.SeatAvailable) - 1) {
-			log.Println("error:no seat match")
-			return errors.New("error: no seat match")
 		}
 	}
 

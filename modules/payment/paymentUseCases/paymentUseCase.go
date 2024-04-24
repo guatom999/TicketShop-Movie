@@ -80,8 +80,8 @@ func (u *paymentUseCase) BuyTicket(pctx context.Context, cfg *config.Config, req
 	}
 
 	if err := u.paymentRepo.ReserveSeat(pctx, cfg, &payment.ReserveSeatReq{
-		// SeatNo: req.SeatNo[0],
-		SeatNo: "A0",
+		MovieId: req.MovieId,
+		SeatNo:  req.SeatNo,
 	}); err != nil {
 		return err
 	}

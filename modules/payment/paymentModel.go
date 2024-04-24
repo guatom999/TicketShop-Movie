@@ -14,4 +14,9 @@ type (
 		Token string `json:"token"`
 		Price int64  `json:"price"`
 	}
+
+	ReserveSeatReq struct {
+		MovieId string   `json:"movie_id"`
+		SeatNo  []string `json:"seat_no"`
+	}
 )

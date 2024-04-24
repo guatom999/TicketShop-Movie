@@ -10,6 +10,9 @@ func (s *server) MovieModule() {
 	movieRepo := moviesRepositories.NewMoviesrepository(s.db)
 	movieUseCase := moviesUseCases.NewmoviesUseCase(movieRepo)
 	movieHandler := moviesHandlers.NewMoviesHandler(movieUseCase)
+	movieQueueHandler := moviesHandlers.NewMoviesQueueHandler(s.cfg, movieUseCase)
+
+	go movieQueueHandler.ReserveSeat()
 
 	movieRouter := s.app.Group("/movie")
 

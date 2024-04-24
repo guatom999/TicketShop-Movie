@@ -19,7 +19,7 @@ type (
 		TestReq(pctx context.Context) (string, error)
 		FindOneMovie(pctx context.Context, movieId string) (*movie.MovieShowCase, error)
 		FindMovieShowTime(pctx context.Context, title string) ([]*movie.MovieShowTimeRes, error)
-		ReserveSeat(pctx context.Context, req []*movie.ReserveDetailReq) error
+		ReserveSeat(pctx context.Context, req *movie.ReserveDetailReq) error
 	}
 
 	moviesUseCase struct {
@@ -154,12 +154,10 @@ func (u *moviesUseCase) FindMovieShowTime(pctx context.Context, title string) ([
 	return movies, nil
 }
 
-func (u *moviesUseCase) ReserveSeat(pctx context.Context, req []*movie.ReserveDetailReq) error {
+func (u *moviesUseCase) ReserveSeat(pctx context.Context, req *movie.ReserveDetailReq) error {
 
-	for _, v := range req {
-		if err := u.moviesRepo.UpdateSeatStatus(pctx, v); err != nil {
-			return err
-		}
+	if err := u.moviesRepo.UpdateSeatStatus(pctx, req); err != nil {
+		return err
 	}
 
 	return nil

@@ -40,7 +40,12 @@ type (
 	}
 
 	ReserveDetailReq struct {
-		MovieId string `json:"movie_id"`
-		SeatNo  string `json:"seat_no"`
+		MovieId string   `json:"movie_id"`
+		SeatNo  []string `json:"seat_no"`
+	}
+
+	ReserveSeatReqTest struct {
+		MovieId     string   `json:"movie_id"`
+		Seat_Number []string `json:"seat_no"`
 	}
 )
