@@ -8,6 +8,7 @@ import (
 	"github.com/guatom999/TicketShop-Movie/config"
 	"github.com/guatom999/TicketShop-Movie/modules/payment"
 	"github.com/guatom999/TicketShop-Movie/modules/payment/paymentRepositories"
+	"github.com/guatom999/TicketShop-Movie/pkg/queue"
 	"github.com/omise/omise-go"
 	"github.com/omise/omise-go/operations"
 )
@@ -72,6 +73,13 @@ func (u *paymentUseCase) CheckOutWithCreditCard(req *payment.CheckOutWithCreditC
 // 	return conn
 
 // }
+
+func BuyTicketConsumer(pctx context.Context, topic string, resCh chan *payment.PaymentReserveRes) {
+
+	reader := queue.KafkaReader()
+	defer reader.Close()
+
+}
 
 func (u *paymentUseCase) BuyTicket(pctx context.Context, cfg *config.Config, req *payment.MovieBuyReq) error {
 

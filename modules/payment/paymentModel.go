@@ -19,4 +19,8 @@ type (
 		MovieId string   `json:"movie_id"`
 		SeatNo  []string `json:"seat_no"`
 	}
+
+	PaymentReserveRes struct {
+		Id string `json:"id"`
+	}
 )

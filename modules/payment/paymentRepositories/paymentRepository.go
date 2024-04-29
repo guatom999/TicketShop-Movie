@@ -112,8 +112,6 @@ func (r *paymentRepository) ReserveSeat(pctx context.Context, cfg *config.Config
 	conn.SetReadDeadline(time.Now().Add(10 * time.Second))
 	_, err := conn.WriteMessages(message)
 
-	// _, err := conn.ReadOffset()
-
 	if err != nil {
 		log.Fatal("failed to write messages:", err)
 		return errors.New("error: failed to send message")
