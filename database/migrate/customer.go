@@ -7,6 +7,8 @@ import (
 	"github.com/guatom999/TicketShop-Movie/config"
 	"github.com/guatom999/TicketShop-Movie/database"
 	"github.com/guatom999/TicketShop-Movie/modules/customer"
+	"github.com/guatom999/TicketShop-Movie/utils"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func CustomerMigrate(pctx context.Context, cfg *config.Config) {
@@ -18,8 +20,16 @@ func CustomerMigrate(pctx context.Context, cfg *config.Config) {
 	documents := func() []any {
 		mocksDatas := []customer.Customer{
 			{
-				Email:    "test1234@hotamil.com",
 				UserName: "customer1",
+				Email:    "test1234@hotamil.com",
+				Password: func() string {
+
+					hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("test1234"), 10)
+
+					return string(hashedPassword)
+				}(),
+				Created_At: utils.GetLocaltime(),
+				Updated_At: utils.GetLocaltime(),
 			},
 		}
 

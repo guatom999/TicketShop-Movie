@@ -1,11 +1,18 @@
 package customer
 
-import "go.mongodb.org/mongo-driver/bson/primitive"
+import (
+	"time"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
 
 type (
 	Customer struct {
-		Id       primitive.ObjectID `json:"_id" bson:"_id,omitempty"`
-		Email    string             `json:"email" bson:"email,omitempty"`
-		UserName string
+		Id         primitive.ObjectID `bson:"_id"`
+		UserName   string             `bson:"username"`
+		Email      string             `bson:"email"`
+		Password   string             `bson:"password"`
+		Created_At time.Time          `bson:"created_at"`
+		Updated_At time.Time          `bson:"updated_at"`
 	}
 )
