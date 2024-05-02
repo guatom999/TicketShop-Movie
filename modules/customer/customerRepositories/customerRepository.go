@@ -21,9 +21,9 @@ type (
 	}
 )
 
-func NewCustomerRepository() CustomerRepositoryService {
+func NewCustomerRepository(db *mongo.Client) CustomerRepositoryService {
 
-	return &customerRepository{}
+	return &customerRepository{db: db}
 
 }
 

@@ -22,8 +22,8 @@ type (
 	}
 )
 
-func NewCustomerUseCase() CustomerUseCaseService {
-	return &customerUseCase{}
+func NewCustomerUseCase(customerRepo customerRepositories.CustomerRepositoryService) CustomerUseCaseService {
+	return &customerUseCase{customerRepo: customerRepo}
 }
 
 func (u *customerUseCase) Register(pctx context.Context, req *customer.RegisterReq) (primitive.ObjectID, error) {

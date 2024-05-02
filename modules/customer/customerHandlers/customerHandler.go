@@ -11,6 +11,7 @@ import (
 
 type (
 	CustomerHandlerService interface {
+		Register(c echo.Context) error
 	}
 
 	customerHandler struct {
