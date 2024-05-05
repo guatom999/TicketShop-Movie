@@ -8,7 +8,7 @@ import (
 
 type (
 	Customer struct {
-		Id         primitive.ObjectID `bson:"_id"`
+		Id         primitive.ObjectID `bson:"_id,omitempty"`
 		UserName   string             `bson:"username"`
 		Email      string             `bson:"email"`
 		Password   string             `bson:"password"`
