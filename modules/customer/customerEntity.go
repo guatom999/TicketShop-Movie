@@ -3,6 +3,7 @@ package customer
 import (
 	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -14,5 +15,24 @@ type (
 		Password   string             `bson:"password"`
 		Created_At time.Time          `bson:"created_at"`
 		Updated_At time.Time          `bson:"updated_at"`
+	}
+
+	Claims struct {
+		Id       string `json:"customer_id"`
+		UserName string `json:"username"`
+		// jwt.RegisteredClaims
+	}
+
+	AuthClaims struct {
+		*Claims
+		jwt.RegisteredClaims
+	}
+
+	CustomerProfile struct {
+		Id         string `json:"_id"`
+		Email      string `json:"email"`
+		UserName   string `json:"user_name"`
+		Created_At string `json:"created_at"`
+		Updated_At string `json:"updated_at"`
 	}
 )

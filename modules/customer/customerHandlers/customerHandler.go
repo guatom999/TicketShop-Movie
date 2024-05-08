@@ -11,6 +11,7 @@ import (
 
 type (
 	CustomerHandlerService interface {
+		Login(c echo.Context) error
 		Register(c echo.Context) error
 	}
 
@@ -21,6 +22,24 @@ type (
 
 func NewCustomerHandler(customerUseCase customerUseCases.CustomerUseCaseService) CustomerHandlerService {
 	return &customerHandler{customerUseCase: customerUseCase}
+}
+
+func (h *customerHandler) Login(c echo.Context) error {
+
+	ctx := context.Background()
+
+	req := new(customer.LoginReq)
+
+	if err := c.Bind(req); err != nil {
+		return c.JSON(http.StatusBadRequest, "something weng wrong")
+	}
+
+	res, err := h.customerUseCase.Login(ctx, req)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, res)
 }
 
 func (h *customerHandler) Register(c echo.Context) error {

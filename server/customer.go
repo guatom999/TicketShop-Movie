@@ -8,11 +8,12 @@ import (
 
 func (s *server) CustomerModules() {
 	customerRepo := customerRepositories.NewCustomerRepository(s.db)
-	customerUseCase := customerUseCases.NewCustomerUseCase(customerRepo)
+	customerUseCase := customerUseCases.NewCustomerUseCase(customerRepo, s.cfg)
 	customerHandler := customerHandlers.NewCustomerHandler(customerUseCase)
 
-	userRouter := s.app.Group("/user")
+	customerRouter := s.app.Group("/user")
 
-	userRouter.POST("/register", customerHandler.Register)
+	customerRouter.POST("/login", customerHandler.Login)
+	customerRouter.POST("/register", customerHandler.Register)
 
 }

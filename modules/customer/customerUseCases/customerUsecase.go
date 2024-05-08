@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log"
 
+	"github.com/guatom999/TicketShop-Movie/config"
 	"github.com/guatom999/TicketShop-Movie/modules/customer"
 	"github.com/guatom999/TicketShop-Movie/modules/customer/customerRepositories"
 	"github.com/guatom999/TicketShop-Movie/utils"
@@ -14,16 +15,58 @@ import (
 
 type (
 	CustomerUseCaseService interface {
+		Login(pctx context.Context, req *customer.LoginReq) (*customer.CustomerProfileRes, error)
 		Register(pctx context.Context, req *customer.RegisterReq) (primitive.ObjectID, error)
 	}
 
 	customerUseCase struct {
 		customerRepo customerRepositories.CustomerRepositoryService
+		cfg          *config.Config
 	}
 )
 
-func NewCustomerUseCase(customerRepo customerRepositories.CustomerRepositoryService) CustomerUseCaseService {
-	return &customerUseCase{customerRepo: customerRepo}
+func NewCustomerUseCase(customerRepo customerRepositories.CustomerRepositoryService, cfg *config.Config) CustomerUseCaseService {
+	return &customerUseCase{
+		customerRepo: customerRepo,
+		cfg:          cfg,
+	}
+}
+
+func (u *customerUseCase) Login(pctx context.Context, req *customer.LoginReq) (*customer.CustomerProfileRes, error) {
+
+	result, err := u.customerRepo.FindOneCustomerWithCredential(pctx, req.Email)
+	if err != nil {
+		log.Println(err.Error())
+		return nil, err
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(result.Password), []byte(req.Password)); err != nil {
+		return nil, errors.New("error: password mismatch")
+	}
+
+	accessToken := u.customerRepo.AccessToken(u.cfg, &customer.Claims{
+		Id:       result.Id.Hex(),
+		UserName: result.UserName,
+	})
+
+	refreshToken := u.customerRepo.RefreshToken(u.cfg, &customer.Claims{
+		Id:       result.Id.Hex(),
+		UserName: result.UserName,
+	})
+
+	return &customer.CustomerProfileRes{
+		CustomerProfile: &customer.CustomerProfile{
+			Id:         result.Id.Hex(),
+			Email:      result.Email,
+			UserName:   result.UserName,
+			Created_At: utils.GetStringTime(result.Created_At),
+			Updated_At: utils.GetStringTime(result.Updated_At),
+		},
+		Credential: &customer.CredentailRes{
+			AccessToken:  accessToken,
+			RefreshToken: refreshToken,
+		},
+	}, nil
 }
 
 func (u *customerUseCase) Register(pctx context.Context, req *customer.RegisterReq) (primitive.ObjectID, error) {

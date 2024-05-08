@@ -8,6 +8,8 @@ import (
 	"github.com/guatom999/TicketShop-Movie/database"
 	"github.com/guatom999/TicketShop-Movie/modules/customer"
 	"github.com/guatom999/TicketShop-Movie/utils"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -47,6 +49,18 @@ func CustomerMigrate(pctx context.Context, cfg *config.Config) {
 	if err != nil {
 		log.Printf("Insert Customer failed:%s", err.Error())
 		panic(err)
+	}
+
+	col = db.Collection("customer_auth")
+
+	indexs, _ := col.Indexes().CreateMany(pctx, []mongo.IndexModel{
+		{Keys: bson.D{{"_id", 1}}},
+		{Keys: bson.D{{"player_id", 1}}},
+		{Keys: bson.D{{"refresh_token", 1}}},
+	})
+
+	for i, index := range indexs {
+		log.Printf("Index %d is %s", i, index)
 	}
 
 	log.Println("BookingHistoryMigrate Customer Db completed", result)
