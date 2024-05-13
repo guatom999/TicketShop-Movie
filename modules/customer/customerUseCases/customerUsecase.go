@@ -3,6 +3,7 @@ package customerUseCases
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 
 	"github.com/guatom999/TicketShop-Movie/config"
@@ -34,6 +35,8 @@ func NewCustomerUseCase(customerRepo customerRepositories.CustomerRepositoryServ
 
 func (u *customerUseCase) Login(pctx context.Context, req *customer.LoginReq) (*customer.CustomerProfileRes, error) {
 
+	fmt.Println("login passport is", req.Email)
+
 	result, err := u.customerRepo.FindOneCustomerWithCredential(pctx, req.Email)
 	if err != nil {
 		log.Println(err.Error())
@@ -55,6 +58,7 @@ func (u *customerUseCase) Login(pctx context.Context, req *customer.LoginReq) (*
 	})
 
 	return &customer.CustomerProfileRes{
+		Status: "ok",
 		CustomerProfile: &customer.CustomerProfile{
 			Id:         result.Id.Hex(),
 			Email:      result.Email,

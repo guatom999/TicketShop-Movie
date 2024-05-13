@@ -12,6 +12,7 @@ type (
 		Password string `json:"password"`
 	}
 	CustomerProfileRes struct {
+		Status string `json:"status"`
 		*CustomerProfile
 		Credential *CredentailRes `json:"credential"`
 	}
