@@ -62,13 +62,14 @@ func (u *customerUseCase) Login(pctx context.Context, req *customer.LoginReq) (*
 		CustomerProfile: &customer.CustomerProfile{
 			Id:         result.Id.Hex(),
 			Email:      result.Email,
+			ImageUrl:   result.ImageUrl,
 			UserName:   result.UserName,
 			Created_At: utils.GetStringTime(result.Created_At),
 			Updated_At: utils.GetStringTime(result.Updated_At),
-		},
-		Credential: &customer.CredentailRes{
-			AccessToken:  accessToken,
-			RefreshToken: refreshToken,
+			Credential: &customer.CredentailRes{
+				AccessToken:  accessToken,
+				RefreshToken: refreshToken,
+			},
 		},
 	}, nil
 }
@@ -84,6 +85,7 @@ func (u *customerUseCase) Register(pctx context.Context, req *customer.RegisterR
 	result, err := u.customerRepo.InsertCustomer(pctx, &customer.Customer{
 		UserName:   req.UserName,
 		Email:      req.Email,
+		ImageUrl:   "https://t4.ftcdn.net/jpg/05/49/98/39/360_F_549983970_bRCkYfk0P6PP5fKbMhZMIb07mCJ6esXL.jpg",
 		Password:   string(hashedPassword),
 		Created_At: utils.GetLocaltime(),
 		Updated_At: utils.GetLocaltime(),

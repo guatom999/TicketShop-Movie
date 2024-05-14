@@ -12,8 +12,17 @@ type (
 		Password string `json:"password"`
 	}
 	CustomerProfileRes struct {
-		Status string `json:"status"`
-		*CustomerProfile
+		Status           string `json:"status"`
+		*CustomerProfile `json:"user"`
+	}
+
+	CustomerProfile struct {
+		Id         string         `json:"_id"`
+		Email      string         `json:"email"`
+		UserName   string         `json:"user_name"`
+		ImageUrl   string         `json:"image_url"`
+		Created_At string         `json:"created_at"`
+		Updated_At string         `json:"updated_at"`
 		Credential *CredentailRes `json:"credential"`
 	}
 
