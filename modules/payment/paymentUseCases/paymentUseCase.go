@@ -76,7 +76,7 @@ func (u *paymentUseCase) CheckOutWithCreditCard(req *payment.CheckOutWithCreditC
 
 func BuyTicketConsumer(pctx context.Context, topic string, resCh chan *payment.PaymentReserveRes) {
 
-	reader := queue.KafkaReader()
+	reader := queue.KafkaReader("buy-ticket")
 	defer reader.Close()
 
 }

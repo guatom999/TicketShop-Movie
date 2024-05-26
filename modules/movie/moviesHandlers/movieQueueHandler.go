@@ -56,12 +56,13 @@ func (h *moviesQueueHandler) ReserveSeat() {
 
 	data := new(movie.ReserveSeatReqTest)
 
-	reader := queue.KafkaReader()
+	reader := queue.KafkaReader("buy-ticket")
 	defer reader.Close()
 
 	for {
 
 		message, err := reader.ReadMessage(ctx)
+		fmt.Println("message is =================================>", message)
 		if err != nil {
 			fmt.Println("Error reading message:", err)
 			break

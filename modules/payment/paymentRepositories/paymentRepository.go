@@ -128,6 +128,10 @@ func (r *paymentRepository) ReserveSeat(pctx context.Context, cfg *config.Config
 	return nil
 }
 
+func (r *paymentRepository) AddTicketToCustomer(pctx context.Context, cfg *config.Config, req *payment.AddCustomerTicket) error {
+	return nil
+}
+
 func (r *paymentRepository) RollBackReserveSeat(pctx context.Context, cfg *config.Config) error {
 	return nil
 }

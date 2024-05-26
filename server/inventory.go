@@ -10,10 +10,14 @@ func (s *server) InventoryModule() {
 	inventoryRepo := inventoryRepositories.NewInventoryRepository(s.db)
 	inventoryUseCase := inventoryUseCases.NewInventoryUseCase(inventoryRepo)
 	inventoryHandler := inventoryHandlers.NewInventoryHandler(inventoryUseCase)
+	inventoryQueueHandler := inventoryHandlers.NewInventoryQueueHandler(s.cfg, inventoryUseCase)
 
-	tikcetRouter := s.app.Group("/inventory")
+	ticketRouter := s.app.Group("/inventory")
+
+	go inventoryQueueHandler.AddCustomerTransaction()
 
 	// tikcetRouter.POST("/add", inventoryHandler.FindCustomerTicket)
-	tikcetRouter.GET("/:customerid", inventoryHandler.FindCustomerTicket)
+	ticketRouter.GET("/:customerid", inventoryHandler.FindCustomerTicket)
+	// ticketRouter.PO
 
 }

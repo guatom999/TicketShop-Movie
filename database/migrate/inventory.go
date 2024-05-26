@@ -17,10 +17,10 @@ func InventoryMigrate(pctx context.Context, cfg *config.Config) {
 	col := db.Collection("ticket_inventory")
 
 	documents := func() []any {
-		mockDatas := []inventory.Inventory{
+		mockDatas := []inventory.CustomerTicket{
 			{
 				CustomerId: "user0001",
-				TicketId:   "Ticket0001",
+				// TicketId:   "Ticket0001",
 			},
 		}
 

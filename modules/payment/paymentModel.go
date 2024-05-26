@@ -20,6 +20,11 @@ type (
 		SeatNo  []string `json:"seat_no"`
 	}
 
+	AddCustomerTicket struct {
+		CustomerId string `json:"customer_id"`
+		MovieId    string `json:"movie_id"`
+	}
+
 	PaymentReserveRes struct {
 		Id string `json:"id"`
 	}

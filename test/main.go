@@ -3,24 +3,16 @@ package main
 import "fmt"
 
 func main() {
+	output := []int{1, 2, 3, 4}
+	result := make([]int, 0)
 
-	test := []int{1, 2, 3, 4}
-
-	EachCons(test, 3)
-
-}
-
-func EachCons(arr []int, n int) [][]int {
-	// your code here
-	result := make([][]int, 0)
-	for i, _ := range arr {
-		if (i + n) > len(arr) {
-			break
+	for i, _ := range output {
+		if i == 2 {
+			result = append(result, 9)
 		}
-		result = append(result, arr[i:i+n])
+		result = append(result, output[i])
 	}
 
-	fmt.Println("print res", result)
+	fmt.Println("result", result)
 
-	return result
 }

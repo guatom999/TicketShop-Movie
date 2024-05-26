@@ -18,7 +18,7 @@ func KafkaConn(cfg *config.Config, topic string) *kafka.Conn {
 
 }
 
-func KafkaReader() *kafka.Reader {
+func KafkaReader(topic string) *kafka.Reader {
 	// Define topic and consumer group
 	// topic := "your-topic"
 	groupID := "my-consumer-group"
@@ -27,7 +27,7 @@ func KafkaReader() *kafka.Reader {
 	readerConfig := kafka.ReaderConfig{
 		Brokers:     []string{"localhost:9092"}, // Adjust broker address(es)
 		GroupID:     groupID,
-		Topic:       "buy-ticket",
+		Topic:       topic,
 		StartOffset: kafka.LastOffset,
 	}
 
