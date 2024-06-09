@@ -8,11 +8,13 @@ import (
 	"github.com/guatom999/TicketShop-Movie/modules/inventory"
 	"github.com/guatom999/TicketShop-Movie/modules/inventory/inventoryRepositories"
 	"github.com/guatom999/TicketShop-Movie/pkg/rest"
+	"github.com/guatom999/TicketShop-Movie/utils"
 )
 
 type (
 	InventoryUseCaseService interface {
-		FindCustomerTicket(pctx context.Context, customerId string) ([]*inventory.CustomerInventoryRes, error)
+		FindCustomerTicket(pctx context.Context, customerId string) ([]*inventory.AddCustomerTicketReq, error)
+		AddCustomerTicket(pctx context.Context, req *inventory.AddCustomerTicketReq)
 	}
 
 	inventoryUseCase struct {
@@ -24,9 +26,8 @@ func NewInventoryUseCase(inventoryRepo inventoryRepositories.InventoryRepository
 	return &inventoryUseCase{inventoryRepo: inventoryRepo}
 }
 
-func (u *inventoryUseCase) FindCustomerTicket(pctx context.Context, customerId string) ([]*inventory.CustomerInventoryRes, error) {
+func (u *inventoryUseCase) FindCustomerTicket(pctx context.Context, customerId string) ([]*inventory.AddCustomerTicketReq, error) {
 
-	fmt.Println("Find CustomerTicket")
 	baseUrl := "http://localhost:8090/movie/getmovieshowtime/"
 	paramsUrl := baseUrl + customerId
 
@@ -39,5 +40,24 @@ func (u *inventoryUseCase) FindCustomerTicket(pctx context.Context, customerId s
 	log.Println("Result is", result)
 
 	return nil, nil
+
+}
+
+func (u *inventoryUseCase) AddCustomerTicket(pctx context.Context, req *inventory.AddCustomerTicketReq) {
+
+	insertId, err := u.inventoryRepo.AddCustomerTicket(pctx, &inventory.CustomerTicket{
+		CustomerId: req.CustomerId,
+		MovieId:    req.MovieId,
+		MovieName:  "Test",
+		Created_At: utils.GetLocaltime(),
+		Price:      req.Quantity * 150,
+		Seat:       req.SeatNo,
+	})
+
+	if err != nil {
+		fmt.Println("insertId ", insertId)
+	}
+
+	fmt.Println("insertID is", insertId)
 
 }

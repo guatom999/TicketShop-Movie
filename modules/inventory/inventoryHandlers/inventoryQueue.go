@@ -6,8 +6,8 @@ import (
 	"fmt"
 
 	"github.com/guatom999/TicketShop-Movie/config"
+	"github.com/guatom999/TicketShop-Movie/modules/inventory"
 	"github.com/guatom999/TicketShop-Movie/modules/inventory/inventoryUseCases"
-	"github.com/guatom999/TicketShop-Movie/modules/movie"
 	"github.com/guatom999/TicketShop-Movie/pkg/queue"
 )
 
@@ -33,25 +33,24 @@ func (h *inventoryQueueHanlder) AddCustomerTransaction() {
 
 	ctx := context.Background()
 
-	data := new(movie.ReserveSeatReqTest)
+	data := new(inventory.AddCustomerTicketReq)
 
-	reader := queue.KafkaReader("buy-ticket")
+	reader := queue.KafkaReader("add-ticket")
 	defer reader.Close()
 
 	for {
 
 		message, err := reader.ReadMessage(ctx)
-		fmt.Println("inventory message is =================================>", message)
 		if err != nil {
 			fmt.Println("Error reading message:", err)
 			break
 		}
 
-		fmt.Println("message is", message)
-
 		if err := json.Unmarshal(message.Value, data); err != nil {
 			fmt.Printf("Error: Unmarshal error %s", err.Error())
 		}
+
+		h.inventoryUseCase.AddCustomerTicket(ctx, data)
 
 	}
 

@@ -94,6 +94,15 @@ func (u *paymentUseCase) BuyTicket(pctx context.Context, cfg *config.Config, req
 		return err
 	}
 
-	return nil
+	if err := u.paymentRepo.AddTicketToCustomer(pctx, cfg, &payment.AddCustomerTicket{
+		CustomerId: req.CustomerId,
+		Date:       req.Date,
+		MovieId:    req.MovieId,
+		SeatNo:     req.SeatNo,
+		Quantity:   req.Quantity,
+	}); err != nil {
+		return nil
+	}
 
+	return nil
 }

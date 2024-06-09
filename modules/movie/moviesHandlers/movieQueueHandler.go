@@ -62,7 +62,6 @@ func (h *moviesQueueHandler) ReserveSeat() {
 	for {
 
 		message, err := reader.ReadMessage(ctx)
-		fmt.Println("message is =================================>", message)
 		if err != nil {
 			fmt.Println("Error reading message:", err)
 			break

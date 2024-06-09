@@ -23,13 +23,14 @@ type (
 	PaymentRepositoryService interface {
 		// ReserveSeat(pctx context.Context) error
 		ReserveSeat(pctx context.Context, cfg *config.Config, req *payment.ReserveSeatReq) error
+		AddTicketToCustomer(pctx context.Context, cfg *config.Config, req *payment.AddCustomerTicket) error
 		GetOffset(pctx context.Context) (int64, error)
 		UpsertOfset(pctx context.Context, offset int64) error
 	}
 
 	paymentRepository struct {
-		cfg *config.Config
-		db  *mongo.Client
+		// cfg *config.Config
+		db *mongo.Client
 	}
 )
 
@@ -129,6 +130,30 @@ func (r *paymentRepository) ReserveSeat(pctx context.Context, cfg *config.Config
 }
 
 func (r *paymentRepository) AddTicketToCustomer(pctx context.Context, cfg *config.Config, req *payment.AddCustomerTicket) error {
+
+	ctx, cancel := context.WithTimeout(pctx, time.Second*20)
+	defer cancel()
+
+	conn := PaymentConsumer(ctx, cfg, "add-ticket")
+
+	message := kafka.Message{
+		Value: utils.EncodeMessage(req),
+	}
+
+	conn.SetReadDeadline(time.Now().Add(time.Second * 20))
+	_, err := conn.WriteMessages(message)
+
+	if err != nil {
+		log.Fatalf("Error writing message: %v", err)
+		return errors.New("error: write message failed")
+	}
+
+	if err := conn.Close(); err != nil {
+		log.Fatalf("Error Failed to close queue: %v", err)
+		return errors.New("error: failed to close messagq queue")
+	}
+	fmt.Println("Send Message Success")
+
 	return nil
 }
 

@@ -20,6 +20,7 @@ type (
 		InsertMovie(pctx context.Context, req *movie.Movie) error
 		FindOneMovie(pctx context.Context, movieId string) (*movie.Movie, error)
 		FindAllMovie(pctx context.Context, filter any) ([]*movie.MovieData, error)
+		FindComingSoonMovie(pctx context.Context, filter any) ([]*movie.MovieData, error)
 		FindMovieShowtime(pctx context.Context, movieId string) ([]*movie.MovieShowTimeRes, error)
 		UpdateSeatStatus(pctx context.Context, req *movie.ReserveDetailReq) error
 		// IsMovieAvaliable(pctx context.Context, req string) bool
@@ -197,6 +198,19 @@ func (r *moviesrepository) FindAllMovie(pctx context.Context, filter any) ([]*mo
 	}
 
 	return results, nil
+}
+
+func (r *moviesrepository) FindComingSoonMovie(pctx context.Context, filter any) ([]*movie.MovieData, error) {
+
+	// ctx, cancel := context.WithTimeout(pctx, time.Second*20)
+	// defer cancel()
+
+	// db := r.db.Database("movie_db")
+	// col := db.Collection("movie")
+
+	// col.Find(ctx , )
+
+	return nil, nil
 }
 
 func (r *moviesrepository) FindMovieShowtime(pctx context.Context, movieId string) ([]*movie.MovieShowTimeRes, error) {

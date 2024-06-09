@@ -33,6 +33,14 @@ func NewmoviesUseCase(moviesRepo moviesRepositories.MoviesRepositoryService) Mov
 
 func (u *moviesUseCase) AddOneMovie(pctx context.Context, req *movie.AddMovieReq) error {
 
+	// splitDate := strings.Split(req.ReleaseAt, "-")
+
+	// for _, v := range splitDate {
+	// 	fmt.Println("test splitdate", v)
+	// }
+
+	// fmt.Println("convert time is", utils.ConvertStringDateToTime(req.ReleaseAt))
+
 	if err := u.moviesRepo.InsertMovie(pctx, &movie.Movie{
 		Title:           req.Title,
 		Price:           req.Price,
@@ -40,8 +48,8 @@ func (u *moviesUseCase) AddOneMovie(pctx context.Context, req *movie.AddMovieReq
 		CreatedAt:       time.Now(),
 		UpdatedAt:       time.Now(),
 		Category:        "RomCom",
-		ReleaseAt:       utils.GetLocaltime(),
-		OutOfTheatersAt: utils.GetLocaltime().Add(time.Hour * 168),
+		ReleaseAt:       utils.ConvertStringDateToTime(req.ReleaseAt),
+		OutOfTheatersAt: utils.ConvertStringDateToTime(req.OutOfTheatersAt),
 	}); err != nil {
 		return err
 	}

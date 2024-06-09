@@ -13,6 +13,7 @@ import (
 
 type (
 	InventoryRepositoryService interface {
+		AddCustomerTicket(pctx context.Context, req *inventory.CustomerTicket) (primitive.ObjectID, error)
 	}
 
 	inventoryRepository struct {

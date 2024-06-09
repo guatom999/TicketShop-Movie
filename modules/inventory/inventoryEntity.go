@@ -1,6 +1,10 @@
 package inventory
 
-import "go.mongodb.org/mongo-driver/bson/primitive"
+import (
+	"time"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
 
 type (
 	CustomerTicket struct {
@@ -8,8 +12,8 @@ type (
 		CustomerId string             `json:"customer_id" bson:"customer_id"`
 		MovieId    string             `json:"movie_id" bson:"movie_id"`
 		MovieName  string             `json:"movie_name" bson:"movie_name"`
-		Created_At string             `json:"created_at" bson:"created_at"`
-		Price      string             `json:"price" bson:"price"`
+		Created_At time.Time          `json:"created_at" bson:"created_at"`
+		Price      int64              `json:"price" bson:"price"`
 		Seat       []string           `json:"seat" bson:"seat"`
 	}
 )
