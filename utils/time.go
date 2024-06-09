@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"log"
 	"time"
 )
@@ -12,6 +13,24 @@ func GetLocaltime() time.Time {
 		panic(err)
 	}
 	return time.Now().In(loc)
+}
+
+func ConvertStringDateToTime(stringDate string) time.Time {
+
+	layout := "02-01-2006"
+
+	// Parse the string into a time.Time object
+	t, err := time.Parse(layout, stringDate)
+
+	if err != nil {
+		fmt.Println("Error parsing string:", err)
+		return time.Now()
+	}
+
+	// Now you have a time.Time object representing the date
+	fmt.Println(t)
+
+	return t
 }
 
 func SetSpecificTime(year int, month time.Month, day, hour, minute, second int) time.Time {
