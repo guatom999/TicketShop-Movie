@@ -16,6 +16,7 @@ type (
 	MoviesUseCaseService interface {
 		AddOneMovie(pctx context.Context, req *movie.AddMovieReq) error
 		FindAllMovie(pctx context.Context) ([]*movie.MovieData, error)
+		FindComingSoonMovie(pctx context.Context) ([]*movie.MovieData, error)
 		TestReq(pctx context.Context) (string, error)
 		FindOneMovie(pctx context.Context, movieId string) (*movie.MovieShowCase, error)
 		FindMovieShowTime(pctx context.Context, title string) ([]*movie.MovieShowTimeRes, error)
@@ -76,7 +77,7 @@ func (u *moviesUseCase) FindAllMovie(pctx context.Context) ([]*movie.MovieData, 
 
 	filter := bson.D{}
 
-	filter = append(filter, bson.E{"out_of_theaters_at", bson.D{{"$gt", utils.GetLocaltime()}}})
+	filter = append(filter, bson.E{"out_of_theaters_at", bson.D{{"$gt", utils.GetLocaltime()}}}, bson.E{"release_at", bson.D{{"$lt", utils.GetLocaltime()}}})
 
 	result, err := u.moviesRepo.FindAllMovie(pctx, filter)
 	if err != nil {
@@ -84,6 +85,20 @@ func (u *moviesUseCase) FindAllMovie(pctx context.Context) ([]*movie.MovieData, 
 	}
 
 	return result, nil
+}
+
+func (u *moviesUseCase) FindComingSoonMovie(pctx context.Context) ([]*movie.MovieData, error) {
+
+	filter := bson.D{}
+
+	filter = append(filter, bson.E{"release_at", bson.D{{"$gt", utils.GetLocaltime()}}})
+
+	results, err := u.moviesRepo.FindComingSoonMovie(pctx, filter)
+	if err != nil {
+		return results, err
+	}
+
+	return results, nil
 }
 
 func (u *moviesUseCase) FindManyMovie(pctx context.Context, basePaginateUrl string) error {

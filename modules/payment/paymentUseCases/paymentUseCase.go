@@ -1,36 +1,52 @@
 package paymentUseCases
 
 import (
+	"bytes"
 	"context"
 	"errors"
+	"fmt"
+	"io"
 	"log"
+	"mime/multipart"
+	"time"
 
+	"cloud.google.com/go/storage"
 	"github.com/guatom999/TicketShop-Movie/config"
 	"github.com/guatom999/TicketShop-Movie/modules/payment"
 	"github.com/guatom999/TicketShop-Movie/modules/payment/paymentRepositories"
+	"github.com/guatom999/TicketShop-Movie/pkg/file"
 	"github.com/guatom999/TicketShop-Movie/pkg/queue"
 	"github.com/omise/omise-go"
 	"github.com/omise/omise-go/operations"
+	"github.com/skip2/go-qrcode"
 )
 
 type (
 	PaymentUseCaseService interface {
 		BuyTicket(pctx context.Context, cfg *config.Config, req *payment.MovieBuyReq) error
 		CheckOutWithCreditCard(req *payment.CheckOutWithCreditCard) error
+		// UploadFileTest(file *multipart.FileHeader) error
+		UploadFileTest(file multipart.File, object string) error
 	}
 
 	paymentUseCase struct {
 		paymentRepo paymentRepositories.PaymentRepositoryService
 		cfg         *config.Config
 		opnClient   *omise.Client
+		bucketName  string
+		uploadPath  string
+		cl          *storage.Client
 	}
 )
 
-func NewPaymentUseCase(paymentRepo paymentRepositories.PaymentRepositoryService, cfg *config.Config, opnClient *omise.Client) PaymentUseCaseService {
+func NewPaymentUseCase(paymentRepo paymentRepositories.PaymentRepositoryService, cfg *config.Config, opnClient *omise.Client, cli *storage.Client) PaymentUseCaseService {
 	return &paymentUseCase{
 		paymentRepo: paymentRepo,
 		cfg:         cfg,
 		opnClient:   opnClient,
+		bucketName:  "ticket-shop-bucket",
+		uploadPath:  "ticket-image/",
+		cl:          cli,
 	}
 }
 
@@ -102,6 +118,53 @@ func (u *paymentUseCase) BuyTicket(pctx context.Context, cfg *config.Config, req
 		Quantity:   req.Quantity,
 	}); err != nil {
 		return nil
+	}
+
+	var png []byte
+	png, err := qrcode.Encode("https://example.org", qrcode.Medium, 256)
+	if err != nil {
+		fmt.Println("Error: Failed to create qrcode file:", err.Error())
+		return errors.New("error:failed to create qrcode file")
+	}
+
+	if err := file.UploadFile(u.cfg, png); err != nil {
+		fmt.Println("Error: Failed to create qrcode file:", err.Error())
+		return errors.New("error:failed to create qrcode file")
+	}
+
+	return nil
+}
+
+type UploadResponse struct {
+	Filename string `json:"filename"`
+	URL      string `json:"url"`
+}
+
+func (c *paymentUseCase) UploadFileTest(file multipart.File, object string) error {
+	ctx := context.Background()
+
+	ctx, cancel := context.WithTimeout(ctx, time.Second*50)
+	defer cancel()
+
+	fmt.Println("TestUpload", file)
+	var png []byte
+	png, err := qrcode.Encode("https://photos.app.goo.gl/pkN35vFQhc6DRXqQ6", qrcode.Medium, 256)
+	if err != nil {
+		fmt.Println("Error: Failed to create qrcode file:", err.Error())
+		return errors.New("error:failed to create qrcode file")
+	}
+
+	buff := bytes.NewBuffer(png)
+
+	// Upload an object with storage.Writer.
+	wc := c.cl.Bucket(c.bucketName).Object(c.uploadPath + object).NewWriter(ctx)
+	if _, err := io.Copy(wc, buff); err != nil {
+		fmt.Printf("Error:Failed to Upload File io.Copy: %s", err.Error())
+		return fmt.Errorf("io.Copy: %v", err)
+	}
+	if err := wc.Close(); err != nil {
+		fmt.Printf("Error:Failed to Upload File wc.Close: %s", err.Error())
+		return fmt.Errorf("Writer.Close: %v", err)
 	}
 
 	return nil

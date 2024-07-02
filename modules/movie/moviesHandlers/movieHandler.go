@@ -14,6 +14,7 @@ type (
 		AddOneMovie(c echo.Context) error
 		FindOneMovie(c echo.Context) error
 		GetAllMovie(c echo.Context) error
+		GetAllComingSoonMovie(c echo.Context) error
 		TestReq(c echo.Context) error
 		FindMovieShowTime(c echo.Context) error
 		ReserveSeat(c echo.Context) error
@@ -65,6 +66,18 @@ func (h *moviesHandler) GetAllMovie(c echo.Context) error {
 	ctx := context.Background()
 
 	result, err := h.moviesUseCase.FindAllMovie(ctx)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err)
+	}
+
+	return c.JSON(http.StatusOK, result)
+}
+
+func (h *moviesHandler) GetAllComingSoonMovie(c echo.Context) error {
+
+	ctx := context.Background()
+
+	result, err := h.moviesUseCase.FindComingSoonMovie(ctx)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err)
 	}

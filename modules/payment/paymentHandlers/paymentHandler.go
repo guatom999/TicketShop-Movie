@@ -13,6 +13,7 @@ import (
 type (
 	PaymentHandlerService interface {
 		BuyTicket(c echo.Context) error
+		TestUpload(c echo.Context) error
 		// CheckOutWithCreditCard(c echo.Context) error
 	}
 
@@ -44,4 +45,23 @@ func (h *paymentHandler) BuyTicket(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, "Buy Ticket Success")
+}
+
+func (h *paymentHandler) TestUpload(c echo.Context) error {
+
+	file, err := c.FormFile("image")
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+
+	blobfile, err := file.Open()
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+
+	if err := h.paymentUseCase.UploadFileTest(blobfile, ""); err != nil {
+		return c.JSON(http.StatusInternalServerError, err)
+	}
+
+	return c.JSON(http.StatusOK, "test")
 }
