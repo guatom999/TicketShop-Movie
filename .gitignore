@@ -52,6 +52,7 @@ README.md
 /test
 ./test
 
+.env
 ./env
 /env
 \env
