@@ -14,6 +14,7 @@ type (
 		Jwt   Jwt
 		Kafka Kafka
 		Omise Omise
+		Gcp   Gcp
 	}
 
 	App struct {
@@ -41,6 +42,11 @@ type (
 	Omise struct {
 		PublicKey string
 		SecretKey string
+	}
+
+	Gcp struct {
+		BucketName string
+		FileLimit  int64
 	}
 )
 
@@ -81,6 +87,10 @@ func GetConfig(path string) Config {
 		Omise: Omise{
 			PublicKey: viper.GetString("OMISE_PUBLIC_KEY"),
 			SecretKey: viper.GetString("OMISE_SECRET_KEY"),
+		},
+		Gcp: Gcp{
+			BucketName: viper.GetString("APP_GCP_BUCKET"),
+			FileLimit:  int64(viper.GetInt("APP_FILE_LIMIT")),
 		},
 	}
 }

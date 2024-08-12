@@ -1,9 +1,11 @@
-package file
+package gcpfile
 
 import (
+	"bytes"
 	"context"
 	"errors"
-	"log"
+	"fmt"
+	"io"
 	"mime/multipart"
 	"time"
 
@@ -32,43 +34,43 @@ type (
 	}
 )
 
-func UploadFile(cfg *config.Config, data []byte) error {
+func UploadFile(cfg *config.Config, client *storage.Client, pctx context.Context, destination string, data []byte) (string, error) {
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+	ctx, cancel := context.WithTimeout(pctx, time.Second*50)
 	defer cancel()
 
-	newCli, err := storage.NewClient(context.Background())
-	if err != nil {
-		log.Fatalf("Error: Failed To Connect GCP")
-		return errors.New("error: failed to connect gcp")
+	buff := bytes.NewBuffer(data)
+
+	wc := client.Bucket(cfg.Gcp.BucketName).Object(destination).NewWriter(ctx)
+	if _, err := io.Copy(wc, buff); err != nil {
+		fmt.Printf("Error:Failed to Upload File io.Copy: %s", err.Error())
+		return "", errors.New("faile to used io.copy")
+	}
+	if err := wc.Close(); err != nil {
+		fmt.Printf("Error:Failed to Upload File wc.Close: %s", err.Error())
+		return "", errors.New("faile to closed writer:")
 	}
 
-	cli := &ClientUpLoader{
-		cl:         newCli,
-		projectID:  "ticket-shop-427608",
-		bucketName: "ticket-shop-bucket",
-		// uploadPath: "ticket-image",
-		uploadPath: "ticket-image2/",
+	if err := makePublic(cfg, ctx, client, destination); err != nil {
+		fmt.Printf("Error:Faile to Make File Public: %s", err.Error())
+		return "", errors.New("error: failed to make file public")
 	}
 
-	_ = cli.cl.Bucket("ticket-shop-bucket").Object(cli.uploadPath + "test-01").NewWriter(ctx)
-	// wc.ContentType()
+	urlFile := fmt.Sprintf("https://storage.googleapis.com/%s/%s", cfg.Gcp.BucketName, destination)
+	// urlFile := fmt.Sprint("https://img-cdn.pixlr.com/image-generator/history/65bb506dcb310754719cf81f/ede935de-1138-4f66-8ed7-44bd16efc709/medium.webp")
 
-	// buff := bytes.NewBuffer(b)
+	// urlFile = "https://img-cdn.pixlr.com/image-generator/history/65bb506dcb310754719cf81f/ede935de-1138-4f66-8ed7-44bd16efc709/medium.webp"
 
-	// if _, err := io.Copy(wc, data); err != nil {
-	// 	return fmt.Println("io.Copy: %v", err)
-	// }
-	// if err := wc.Close(); err != nil {
-	// 	return fmt.Println("Writer.Close: %v", err)
-	// }
+	return urlFile, nil
 
-	// buff := bytes.NewBuffer(data)
+}
 
-	// if _, err = io.Copy(wc, buff); err != nil {
-	// 	log.Fatalf("Error: failed to upload file: %s", err.Error())
-	// 	return errors.New("error: failed to upload file ")
-	// }
+func makePublic(cfg *config.Config, ctx context.Context, client *storage.Client, destination string) error {
 
+	acl := client.Bucket(cfg.Gcp.BucketName).Object(destination).ACL()
+	if err := acl.Set(ctx, storage.AllUsers, storage.RoleReader); err != nil {
+		return fmt.Errorf("ACLHandle.Set: %w", err)
+	}
+	// fmt.Printf("Blob %v is now publicly accessible.\n", destination)
 	return nil
 }

@@ -40,11 +40,14 @@ func (h *paymentHandler) BuyTicket(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
 
-	if err := h.paymentUseCase.BuyTicket(ctx, h.cfg, req); err != nil {
+	fileUrl, err := h.paymentUseCase.BuyTicket(ctx, h.cfg, req)
+	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
 
-	return c.JSON(http.StatusOK, "Buy Ticket Success")
+	return c.JSON(http.StatusOK, &payment.BuyticketRes{
+		Url: fileUrl,
+	})
 }
 
 func (h *paymentHandler) TestUpload(c echo.Context) error {

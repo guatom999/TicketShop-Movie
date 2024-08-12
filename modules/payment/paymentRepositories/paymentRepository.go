@@ -136,6 +136,8 @@ func (r *paymentRepository) AddTicketToCustomer(pctx context.Context, cfg *confi
 
 	conn := PaymentConsumer(ctx, cfg, "add-ticket")
 
+	fmt.Println("req.MovieName ===============>", req.MovieName)
+
 	message := kafka.Message{
 		Value: utils.EncodeMessage(req),
 	}

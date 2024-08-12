@@ -18,6 +18,7 @@ func (s *server) InventoryModule() {
 
 	// tikcetRouter.POST("/add", inventoryHandler.FindCustomerTicket)
 	ticketRouter.GET("/:customerid", inventoryHandler.FindCustomerTicket)
+	ticketRouter.GET("/getlastticket/:customerid", inventoryHandler.FindLastCustomerTicket)
 	// ticketRouter.PO
 
 }

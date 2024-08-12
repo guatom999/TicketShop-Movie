@@ -127,3 +127,5 @@ func (h *moviesHandler) TestReq(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, result)
 }
+
+// func (h *moviesHandler)

@@ -4,15 +4,22 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/guatom999/TicketShop-Movie/modules/inventory"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type (
 	InventoryRepositoryService interface {
+		FindCustomerTicket(pctx context.Context, customerID string) ([]*inventory.CustomerTikcetRes, error)
+		// FindLastCustomerTicket(pctx context.Context, customerId string, opts []*options.FindOneOptions) (*inventory.CustomerTikcetRes, error)
+		// FindLastCustomerTicket(pctx context.Context, customerId string, opts any) (*inventory.CustomerTikcetRes, error)
+		FindLastCustomerTicket(pctx context.Context, customerId string, opts []*options.FindOneOptions) (*inventory.CustomerTikcetRes, error)
 		AddCustomerTicket(pctx context.Context, req *inventory.CustomerTicket) (primitive.ObjectID, error)
 	}
 
@@ -25,13 +32,77 @@ func NewInventoryRepository(db *mongo.Client) InventoryRepositoryService {
 	return &inventoryRepository{db: db}
 }
 
-func (r *inventoryRepository) FindCustomerTicket(pctx context.Context, customerID string) ([]*inventory.CustomerTicket, error) {
+// func DbConnect(pctx context.Context, dbName string) *mongo.Collection {
+// 	db := r.db.Database("inventory_db")
+// }
 
-	_, cancel := context.WithTimeout(pctx, time.Second*20)
+func (r *inventoryRepository) FindCustomerTicket(pctx context.Context, customerID string) ([]*inventory.CustomerTikcetRes, error) {
+
+	ctx, cancel := context.WithTimeout(pctx, time.Second*30)
 	defer cancel()
 
-	return nil, nil
+	db := r.db.Database("inventory_db")
+	col := db.Collection("ticket_inventory")
 
+	cur, err := col.Find(ctx, bson.M{"customer_id": customerID})
+	if err != nil {
+		log.Printf("Error: Failed to find Customer Ticket %s", err.Error())
+		return make([]*inventory.CustomerTikcetRes, 0), nil
+	}
+
+	results := make([]*inventory.CustomerTikcetRes, 0)
+
+	for cur.Next(ctx) {
+		result := new(inventory.CustomerTicket)
+		if err := cur.Decode(result); err != nil {
+			log.Printf("Error: Failed to Decode From Finding %s", err.Error())
+			return make([]*inventory.CustomerTikcetRes, 0), nil
+		}
+
+		results = append(results, &inventory.CustomerTikcetRes{
+			MovieId:      result.MovieId,
+			MovieName:    result.MovieName,
+			Ticket_Image: result.Ticket_Image,
+			Created_At:   result.Created_At,
+			Price:        result.Price,
+			Seat:         result.Seat,
+		})
+
+	}
+
+	return results, nil
+
+}
+
+// func (r *inventoryRepository) FindLastCustomerTicket(pctx context.Context, filter any, opts []*options.FindOneOptions) (*inventory.CustomerTikcetRes, error) {
+func (r *inventoryRepository) FindLastCustomerTicket(pctx context.Context, customerId string, opts []*options.FindOneOptions) (*inventory.CustomerTikcetRes, error) {
+
+	ctx, cancel := context.WithTimeout(pctx, time.Second*20)
+	defer cancel()
+
+	db := r.db.Database("inventory_db")
+	col := db.Collection("ticket_inventory")
+
+	// filter := bson.M{"customer_id": customerId}
+
+	// sort := bson.M{"created_at": -1}
+
+	// result := new(inventory.CustomerTikcetRes)
+	result := new(inventory.CustomerTicket)
+
+	if err := col.FindOne(ctx, bson.M{"customer_id": customerId}, opts...).Decode(result); err != nil {
+		log.Printf("Error: Failed to Decode From Finding %s", err.Error())
+		return nil, nil
+	}
+
+	return &inventory.CustomerTikcetRes{
+		MovieId:      result.MovieId,
+		MovieName:    result.MovieName,
+		Ticket_Image: result.Ticket_Image,
+		Created_At:   result.Created_At,
+		Price:        result.Price,
+		Seat:         result.Seat,
+	}, nil
 }
 
 func (r *inventoryRepository) AddCustomerTicket(pctx context.Context, req *inventory.CustomerTicket) (primitive.ObjectID, error) {
