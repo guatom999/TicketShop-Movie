@@ -3,7 +3,6 @@ package customerUseCases
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
 
 	"github.com/guatom999/TicketShop-Movie/config"
@@ -35,13 +34,13 @@ func NewCustomerUseCase(customerRepo customerRepositories.CustomerRepositoryServ
 
 func (u *customerUseCase) Login(pctx context.Context, req *customer.LoginReq) (*customer.CustomerProfileRes, error) {
 
-	fmt.Println("login passport is", req.Email)
-
 	result, err := u.customerRepo.FindOneCustomerWithCredential(pctx, req.Email)
 	if err != nil {
 		log.Println(err.Error())
 		return nil, err
 	}
+
+	customerId := "customer:" + result.Id.Hex()
 
 	if err := bcrypt.CompareHashAndPassword([]byte(result.Password), []byte(req.Password)); err != nil {
 		return nil, errors.New("error: password mismatch")
@@ -55,6 +54,13 @@ func (u *customerUseCase) Login(pctx context.Context, req *customer.LoginReq) (*
 	refreshToken := u.customerRepo.RefreshToken(u.cfg, &customer.Claims{
 		Id:       result.Id.Hex(),
 		UserName: result.UserName,
+	})
+
+	u.customerRepo.InsertCustomerCredential(pctx, &customer.Credential{
+		CustomerId:   customerId,
+		Rolecode:     1,
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
 	})
 
 	return &customer.CustomerProfileRes{

@@ -22,6 +22,7 @@ type (
 		InsertCustomer(pctx context.Context, req *customer.Customer) (primitive.ObjectID, error)
 		AccessToken(cfg *config.Config, customerPassport *customer.Claims) string
 		RefreshToken(cfg *config.Config, customerPassport *customer.Claims) string
+		InsertCustomerCredential(pctx context.Context, req *customer.Credential) (primitive.ObjectID, error)
 	}
 
 	customerRepository struct {
@@ -46,6 +47,44 @@ func (r *customerRepository) AddTicketCustomer(pctx context.Context) error {
 
 	return nil
 
+}
+
+func (r *customerRepository) FindOneCustomerCredential(pctx context.Context, customerId string) (*customer.Credential, error) {
+
+	ctx, cancel := context.WithTimeout(pctx, time.Second*20)
+	defer cancel()
+
+	db := r.db.Database("customer_db")
+	col := db.Collection("customer_auth")
+
+	result := new(customer.Credential)
+
+	if err := col.FindOne(ctx, bson.M{"_id": utils.ConvertStringToObjectId(customerId)}).Decode(result); err != nil {
+		log.Printf("Error: FindOneCustomerCredential Failed %s", err.Error())
+		return nil, errors.New("error: find credentail customer failed")
+	}
+
+	return result, nil
+}
+
+func (r *customerRepository) InsertCustomerCredential(pctx context.Context, req *customer.Credential) (primitive.ObjectID, error) {
+
+	ctx, cancel := context.WithTimeout(pctx, time.Second*20)
+	defer cancel()
+
+	req.CreatedAt = utils.GetLocaltime()
+	req.UpdatedAt = utils.GetLocaltime()
+
+	db := r.db.Database("customer_db")
+	col := db.Collection("customer_auth")
+
+	result, err := col.InsertOne(ctx, req)
+	if err != nil {
+		log.Printf("Error: InsertCustomerCredential Failed %s", err.Error())
+		return primitive.NilObjectID, errors.New("error: insert credentail customer failed")
+	}
+
+	return result.InsertedID.(primitive.ObjectID), nil
 }
 
 func (r *customerRepository) FindOneCustomerWithCredential(pctx context.Context, email string) (*customer.Customer, error) {

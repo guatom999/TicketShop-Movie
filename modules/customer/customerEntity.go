@@ -24,6 +24,16 @@ type (
 		// jwt.RegisteredClaims
 	}
 
+	Credential struct {
+		Id           primitive.ObjectID `bson:"_id,omitempty"`
+		CustomerId   string             `bson:"customer_id,omitempty"`
+		Rolecode     int                `bson:"role_code"`
+		AccessToken  string             `bson:"access_token"`
+		RefreshToken string             `bson:"refresh_token"`
+		CreatedAt    time.Time          `bson:"created_at"`
+		UpdatedAt    time.Time          `bson:"updated_at"`
+	}
+
 	AuthClaims struct {
 		*Claims
 		jwt.RegisteredClaims
