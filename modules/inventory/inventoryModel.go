@@ -1,7 +1,5 @@
 package inventory
 
-import "time"
-
 type (
 	AddCustomerTicketReq struct {
 		CustomerId string   `json:"customer_id"`
@@ -14,11 +12,11 @@ type (
 	}
 
 	CustomerTikcetRes struct {
-		MovieId      string    `json:"movie_id" `
-		MovieName    string    `json:"movie_name" `
-		Ticket_Image string    `json:"ticket_image"  `
-		Created_At   time.Time `json:"created_at"  `
-		Price        int64     `json:"price" `
-		Seat         []string  `json:"seat"  `
+		MovieId      string   `json:"movie_id" `
+		MovieName    string   `json:"movie_name" `
+		Ticket_Image string   `json:"ticket_image"  `
+		Created_At   string   `json:"created_at"  `
+		Price        int64    `json:"price" `
+		Seat         []string `json:"seat"  `
 	}
 )

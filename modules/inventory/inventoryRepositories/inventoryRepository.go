@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/guatom999/TicketShop-Movie/modules/inventory"
+	"github.com/guatom999/TicketShop-Movie/utils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -63,7 +64,7 @@ func (r *inventoryRepository) FindCustomerTicket(pctx context.Context, customerI
 			MovieId:      result.MovieId,
 			MovieName:    result.MovieName,
 			Ticket_Image: result.Ticket_Image,
-			Created_At:   result.Created_At,
+			Created_At:   utils.GetStringTime(result.Created_At),
 			Price:        result.Price,
 			Seat:         result.Seat,
 		})
@@ -99,7 +100,7 @@ func (r *inventoryRepository) FindLastCustomerTicket(pctx context.Context, custo
 		MovieId:      result.MovieId,
 		MovieName:    result.MovieName,
 		Ticket_Image: result.Ticket_Image,
-		Created_At:   result.Created_At,
+		Created_At:   utils.GetStringTime(result.Created_At),
 		Price:        result.Price,
 		Seat:         result.Seat,
 	}, nil
