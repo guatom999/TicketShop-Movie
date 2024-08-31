@@ -3,6 +3,8 @@ package movie
 type (
 	AddMovieReq struct {
 		Title           string  `json:"title"`
+		Description     string  `json:"description" `
+		RunningTime     string  `json:"running_time"`
 		Price           float64 `json:"price"`
 		ImageUrl        string  `json:"image_url"`
 		Avaliable       int     `json:"avaliable"`
@@ -14,18 +16,22 @@ type (
 	}
 
 	MovieData struct {
-		MovieId   string  `json:"movie_id"`
-		Title     string  `json:"title"`
+		MovieId string `json:"movie_id"`
+		Title   string `json:"title"`
+		// Description string  `json:"description" `
+		// RunningTime string  `json:"running_time"`
 		Price     float64 `json:"price" bson:"price"`
 		ImageUrl  string  `json:"image_url" bson:"image_url"`
 		Avaliable int     `json:"valiable" bson:"avaliable"`
 	}
 
 	MovieShowCase struct {
-		Title     string  `json:"title"`
-		Price     float64 `json:"price" bson:"price"`
-		ImageUrl  string  `json:"image_url" bson:"image_url"`
-		Avaliable int     `json:"valiable" bson:"avaliable"`
+		Title       string  `json:"title"`
+		Description string  `json:"description" `
+		RunningTime string  `json:"running_time"`
+		Price       float64 `json:"price" bson:"price"`
+		ImageUrl    string  `json:"image_url" bson:"image_url"`
+		Avaliable   int     `json:"valiable" bson:"avaliable"`
 	}
 
 	MovieSearchReq struct {

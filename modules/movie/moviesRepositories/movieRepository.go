@@ -18,7 +18,7 @@ import (
 type (
 	MoviesRepositoryService interface {
 		InsertMovie(pctx context.Context, req *movie.Movie) error
-		FindOneMovie(pctx context.Context, movieId string) (*movie.Movie, error)
+		FindOneMovie(pctx context.Context, movieId string) (*movie.MovieShowCase, error)
 		FindAllMovie(pctx context.Context, filter any) ([]*movie.MovieData, error)
 		FindComingSoonMovie(pctx context.Context, filter any) ([]*movie.MovieData, error)
 		FindMovieShowtime(pctx context.Context, movieId string) ([]*movie.MovieShowTimeRes, error)
@@ -72,7 +72,8 @@ func (r *moviesrepository) InsertMovie(pctx context.Context, req *movie.Movie) e
 				UpdatedAt: func() time.Time {
 					return utils.GetLocaltime()
 				}(),
-				Showtime: utils.SetSpecificTime(2024, 3, 2+int(math.Floor(float64(i)/2)), 10+i, 30, 0),
+				// Showtime: utils.SetSpecificTime(2024, 3, 2+int(math.Floor(float64(i)/2)), 10+i, 30, 0),
+				Showtime: utils.SetSpecificTime(req.ReleaseAt.Year(), req.ReleaseAt.Month(), req.ReleaseAt.Day()+int(math.Floor(float64(i)/2)), 10+i, 30, 0),
 				//Need Refactor
 				SeatAvailable: []movie.SeatAvailable{
 					{"A1": true},
@@ -147,7 +148,7 @@ func (r *moviesrepository) InsertMovie(pctx context.Context, req *movie.Movie) e
 
 }
 
-func (r *moviesrepository) FindOneMovie(pctx context.Context, movieId string) (*movie.Movie, error) {
+func (r *moviesrepository) FindOneMovie(pctx context.Context, movieId string) (*movie.MovieShowCase, error) {
 
 	ctx, cancel := context.WithTimeout(pctx, time.Second*20)
 	defer cancel()
@@ -162,7 +163,14 @@ func (r *moviesrepository) FindOneMovie(pctx context.Context, movieId string) (*
 		return nil, errors.New("error: findone movie failed")
 	}
 
-	return result, nil
+	// return result, nil
+	return &movie.MovieShowCase{
+		Title:       result.Title,
+		Description: result.Description,
+		RunningTime: result.RunningTime,
+		Price:       result.Price,
+		ImageUrl:    result.ImageUrl,
+	}, nil
 }
 
 func (r *moviesrepository) FindAllMovie(pctx context.Context, filter any) ([]*movie.MovieData, error) {
@@ -216,14 +224,14 @@ func (r *moviesrepository) FindComingSoonMovie(pctx context.Context, filter any)
 	results := make([]*movie.MovieData, 0)
 
 	for cursor.Next(ctx) {
-		result := new(movie.MovieData)
+		result := new(movie.Movie)
 		if err := cursor.Decode(result); err != nil {
 			log.Println("Error: Find All Movie Failed:", err.Error())
 			return make([]*movie.MovieData, 0), errors.New("error: find all item failed")
 		}
 
 		results = append(results, &movie.MovieData{
-			MovieId:  result.MovieId,
+			MovieId:  result.Id.Hex(),
 			Title:    result.Title,
 			Price:    result.Price,
 			ImageUrl: result.ImageUrl,

@@ -44,6 +44,8 @@ func (u *moviesUseCase) AddOneMovie(pctx context.Context, req *movie.AddMovieReq
 
 	if err := u.moviesRepo.InsertMovie(pctx, &movie.Movie{
 		Title:           req.Title,
+		Description:     req.Description,
+		RunningTime:     req.RunningTime,
 		Price:           req.Price,
 		ImageUrl:        req.ImageUrl,
 		CreatedAt:       time.Now(),
@@ -66,11 +68,14 @@ func (u *moviesUseCase) FindOneMovie(pctx context.Context, movieId string) (*mov
 		return nil, err
 	}
 
-	return &movie.MovieShowCase{
-		Title:    result.Title,
-		Price:    result.Price,
-		ImageUrl: result.ImageUrl,
-	}, nil
+	// return &movie.MovieShowCase{
+	// 	Title:    result.Title,
+	// 	Price:    result.Price,
+	// 	ImageUrl: result.ImageUrl,
+	// }, nil
+
+	return result, nil
+
 }
 
 func (u *moviesUseCase) FindAllMovie(pctx context.Context) ([]*movie.MovieData, error) {
