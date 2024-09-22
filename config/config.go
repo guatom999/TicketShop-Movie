@@ -67,7 +67,7 @@ func GetConfig(path string) Config {
 
 	return Config{
 		App: App{
-			Name: viper.GetString("APP_NAMe"),
+			Name: viper.GetString("APP_NAME"),
 			Port: viper.GetInt("APP_PORT"),
 		},
 		Db: Db{

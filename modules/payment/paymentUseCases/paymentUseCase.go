@@ -24,7 +24,6 @@ type (
 	PaymentUseCaseService interface {
 		BuyTicket(pctx context.Context, cfg *config.Config, req *payment.MovieBuyReq) (string, error)
 		CheckOutWithCreditCard(req *payment.CheckOutWithCreditCard) error
-		// UploadFileTest(file *multipart.FileHeader) error
 		UploadFileTest(file multipart.File, object string) error
 	}
 
@@ -114,7 +113,9 @@ func (u *paymentUseCase) BuyTicket(pctx context.Context, cfg *config.Config, req
 	}
 
 	var png []byte
-	png, err := qrcode.Encode("https://example.org", qrcode.Medium, 256)
+	reqQrCode := utils.GenQRCode(int(req.Price))
+
+	png, err := qrcode.Encode(reqQrCode, qrcode.Medium, 256)
 	if err != nil {
 		fmt.Println("Error: Failed to create qrcode file:", err.Error())
 		return "", errors.New("error:failed to create qrcode file")
