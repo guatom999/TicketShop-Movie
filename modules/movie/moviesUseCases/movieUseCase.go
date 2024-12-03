@@ -14,7 +14,7 @@ import (
 
 type (
 	MoviesUseCaseService interface {
-		AddOneMovie(pctx context.Context, req *movie.AddMovieReq) error
+		AddOneMovie(pctx context.Context, req []*movie.AddMovieReq) error
 		FindAllMovie(pctx context.Context) ([]*movie.MovieData, error)
 		FindComingSoonMovie(pctx context.Context) ([]*movie.MovieData, error)
 		TestReq(pctx context.Context) (string, error)
@@ -32,7 +32,7 @@ func NewmoviesUseCase(moviesRepo moviesRepositories.MoviesRepositoryService) Mov
 	return &moviesUseCase{moviesRepo: moviesRepo}
 }
 
-func (u *moviesUseCase) AddOneMovie(pctx context.Context, req *movie.AddMovieReq) error {
+func (u *moviesUseCase) AddOneMovie(pctx context.Context, req []*movie.AddMovieReq) error {
 
 	// splitDate := strings.Split(req.ReleaseAt, "-")
 
@@ -40,22 +40,41 @@ func (u *moviesUseCase) AddOneMovie(pctx context.Context, req *movie.AddMovieReq
 	// 	fmt.Println("test splitdate", v)
 	// }
 
-	// fmt.Println("convert time is", utils.ConvertStringDateToTime(req.ReleaseAt))
+	movieEntity := make([]*movie.Movie, 0)
 
-	if err := u.moviesRepo.InsertMovie(pctx, &movie.Movie{
-		Title:           req.Title,
-		Description:     req.Description,
-		RunningTime:     req.RunningTime,
-		Price:           req.Price,
-		ImageUrl:        req.ImageUrl,
-		CreatedAt:       time.Now(),
-		UpdatedAt:       time.Now(),
-		Category:        "RomCom",
-		ReleaseAt:       utils.ConvertStringDateToTime(req.ReleaseAt),
-		OutOfTheatersAt: utils.ConvertStringDateToTime(req.OutOfTheatersAt),
-	}); err != nil {
+	for i := 0; i < len(req); i++ {
+		movieEntity = append(movieEntity, &movie.Movie{
+			Title:           req[i].Title,
+			Description:     req[i].Description,
+			RunningTime:     req[i].RunningTime,
+			Price:           req[i].Price,
+			ImageUrl:        req[i].ImageUrl,
+			CreatedAt:       time.Now(),
+			UpdatedAt:       time.Now(),
+			Category:        "RomCom",
+			ReleaseAt:       utils.ConvertStringDateToTime(req[i].ReleaseAt),
+			OutOfTheatersAt: utils.ConvertStringDateToTime(req[i].OutOfTheatersAt),
+		})
+	}
+
+	if err := u.moviesRepo.InsertMovie(pctx, movieEntity); err != nil {
 		return err
 	}
+
+	// if err := u.moviesRepo.InsertMovie(pctx, &movie.Movie{
+	// 	Title:           req.Title,
+	// 	Description:     req.Description,
+	// 	RunningTime:     req.RunningTime,
+	// 	Price:           req.Price,
+	// 	ImageUrl:        req.ImageUrl,
+	// 	CreatedAt:       time.Now(),
+	// 	UpdatedAt:       time.Now(),
+	// 	Category:        "RomCom",
+	// 	ReleaseAt:       utils.ConvertStringDateToTime(req.ReleaseAt),
+	// 	OutOfTheatersAt: utils.ConvertStringDateToTime(req.OutOfTheatersAt),
+	// }); err != nil {
+	// 	return err
+	// }
 
 	return nil
 }

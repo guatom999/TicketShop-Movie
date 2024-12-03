@@ -7,6 +7,7 @@ import (
 
 	"github.com/guatom999/TicketShop-Movie/config"
 	"github.com/guatom999/TicketShop-Movie/database"
+	"github.com/guatom999/TicketShop-Movie/database/redisConn"
 	"github.com/guatom999/TicketShop-Movie/pkg/opn"
 	"github.com/guatom999/TicketShop-Movie/server"
 )
@@ -27,8 +28,10 @@ func main() {
 
 	defer db.Disconnect(ctx)
 
+	redis := redisConn.RedisConn(ctx, &cfg)
+
 	omiseClient := opn.OmiseConn(&cfg)
 
-	server.NewEchoServer(db, &cfg, omiseClient).Start(ctx)
+	server.NewEchoServer(db, &cfg, omiseClient, redis).Start(ctx)
 
 }

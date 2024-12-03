@@ -20,9 +20,10 @@ type (
 		Title   string `json:"title"`
 		// Description string  `json:"description" `
 		// RunningTime string  `json:"running_time"`
-		Price     float64 `json:"price" bson:"price"`
-		ImageUrl  string  `json:"image_url" bson:"image_url"`
-		Avaliable int     `json:"valiable" bson:"avaliable"`
+		Release_At string  `json:"release_at"`
+		Price      float64 `json:"price" `
+		ImageUrl   string  `json:"image_url" `
+		Avaliable  int     `json:"valiable" `
 	}
 
 	MovieShowCase struct {
@@ -45,6 +46,7 @@ type (
 		Title         string          `json:"title"`
 		ShowTime      string          `json:"show_time"`
 		SeatAvailable []SeatAvailable `json:"seat_available"`
+		IsComingSoon  bool            `json:"is_coming_soon"`
 	}
 
 	ReserveDetailReq struct {

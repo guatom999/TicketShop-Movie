@@ -7,7 +7,7 @@ import (
 )
 
 func (s *server) MovieModule() {
-	movieRepo := moviesRepositories.NewMoviesrepository(s.db)
+	movieRepo := moviesRepositories.NewMoviesrepository(s.db, s.redis)
 	movieUseCase := moviesUseCases.NewmoviesUseCase(movieRepo)
 	movieHandler := moviesHandlers.NewMoviesHandler(movieUseCase)
 	movieQueueHandler := moviesHandlers.NewMoviesQueueHandler(s.cfg, movieUseCase)

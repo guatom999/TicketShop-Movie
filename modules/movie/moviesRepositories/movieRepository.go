@@ -2,6 +2,7 @@ package moviesRepositories
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/guatom999/TicketShop-Movie/modules/movie"
 	"github.com/guatom999/TicketShop-Movie/utils"
+	"github.com/redis/go-redis/v9"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -17,7 +19,9 @@ import (
 
 type (
 	MoviesRepositoryService interface {
-		InsertMovie(pctx context.Context, req *movie.Movie) error
+		// InsertMovie(pctx context.Context, req *movie.Movie) error
+		InsertMovie(pctx context.Context, req []*movie.Movie) error
+		// InsertMovies(pctx context.Context, req []*movie.Movie) error
 		FindOneMovie(pctx context.Context, movieId string) (*movie.MovieShowCase, error)
 		FindAllMovie(pctx context.Context, filter any) ([]*movie.MovieData, error)
 		FindComingSoonMovie(pctx context.Context, filter any) ([]*movie.MovieData, error)
@@ -27,15 +31,16 @@ type (
 	}
 
 	moviesrepository struct {
-		db *mongo.Client
+		db    *mongo.Client
+		redis *redis.Client
 	}
 )
 
-func NewMoviesrepository(db *mongo.Client) MoviesRepositoryService {
-	return &moviesrepository{db: db}
+func NewMoviesrepository(db *mongo.Client, redis *redis.Client) MoviesRepositoryService {
+	return &moviesrepository{db: db, redis: redis}
 }
 
-func (r *moviesrepository) InsertMovie(pctx context.Context, req *movie.Movie) error {
+func (r *moviesrepository) InsertMovie(pctx context.Context, req []*movie.Movie) error {
 
 	ctx, cancel := context.WithTimeout(pctx, time.Second*20)
 	defer cancel()
@@ -43,110 +48,144 @@ func (r *moviesrepository) InsertMovie(pctx context.Context, req *movie.Movie) e
 	db := r.db.Database("movie_db")
 	col := db.Collection("movie")
 
-	result, err := col.InsertOne(ctx, req)
-	if err != nil {
-		log.Printf("Error: Insert One Movie Failed")
-		return errors.New("error: insert one movie failed")
-	}
-
-	lastInsertId := result.InsertedID.(primitive.ObjectID)
-
-	col = db.Collection("movie_available")
-
-	// movieAvailableCount, err := col.CountDocuments(pctx, bson.M{})
-	// if err != nil {
-	// 	log.Printf("Error: Count Documents failed: %v", err)
-	// 	return errors.New("error: countDocuments failed")
-	// }
-
-	addMovieAvailable := func() []any {
-
+	toAddMovies := func() []any {
 		datas := make([]any, 0)
 
-		for i := 0; i < 10; i++ {
-
-			data := movie.MovieAvaliable{
-				Movie_Id:  lastInsertId.Hex(),
-				Title:     req.Title,
-				CreatedAt: utils.GetLocaltime(),
-				UpdatedAt: func() time.Time {
-					return utils.GetLocaltime()
-				}(),
-				// Showtime: utils.SetSpecificTime(2024, 3, 2+int(math.Floor(float64(i)/2)), 10+i, 30, 0),
-				Showtime: utils.SetSpecificTime(req.ReleaseAt.Year(), req.ReleaseAt.Month(), req.ReleaseAt.Day()+int(math.Floor(float64(i)/2)), 10+i, 30, 0),
-				//Need Refactor
-				SeatAvailable: []movie.SeatAvailable{
-					{"A1": true},
-					{"A2": true},
-					{"A3": true},
-					{"A4": true},
-					{"A5": true},
-					{"A6": true},
-					{"A7": true},
-					{"A8": true},
-					{"A9": true},
-					{"A10": true},
-					{"A11": true},
-					{"A12": true},
-					{"B1": true},
-					{"B2": true},
-					{"B3": true},
-					{"B4": true},
-					{"B5": true},
-					{"B6": true},
-					{"B7": true},
-					{"B8": true},
-					{"B9": true},
-					{"B10": true},
-					{"B11": true},
-					{"B12": true},
-					{"C1": true},
-					{"C2": true},
-					{"C3": true},
-					{"C4": true},
-					{"C5": true},
-					{"C6": true},
-					{"C7": true},
-					{"C8": true},
-					{"C9": true},
-					{"C10": true},
-					{"C11": true},
-					{"C12": true},
-					{"D1": true},
-					{"D2": true},
-					{"D3": true},
-					{"D4": true},
-					{"D5": true},
-					{"D6": true},
-					{"D7": true},
-					{"D8": true},
-					{"D9": true},
-					{"D10": true},
-					{"D11": true},
-					{"D12": true},
-				},
+		for i := 0; i < len(req); i++ {
+			data := &movie.Movie{
+				Title:           req[i].Title,
+				Description:     req[i].Description,
+				RunningTime:     req[i].RunningTime,
+				Price:           req[i].Price,
+				ImageUrl:        req[i].ImageUrl,
+				CreatedAt:       req[i].CreatedAt,
+				UpdatedAt:       req[i].UpdatedAt,
+				Category:        req[i].Category,
+				ReleaseAt:       req[i].ReleaseAt,
+				OutOfTheatersAt: req[i].OutOfTheatersAt,
 			}
 
 			datas = append(datas, data)
-
 		}
 
 		return datas
 
 	}()
 
-	_, err = col.InsertMany(pctx, addMovieAvailable)
+	result, err := col.InsertMany(ctx, toAddMovies)
+	if err != nil {
+		log.Printf("Error: Insert One Movie Failed")
+		return errors.New("error: insert one movie failed")
+	}
+
+	fmt.Println("data after insert is", result)
+
+	dayLength := req[len(req)-1].OutOfTheatersAt.Day() - req[0].ReleaseAt.Day() + 1
+
+	lastInsertId := result.InsertedIDs[0].(primitive.ObjectID)
+
+	col = db.Collection("movie_available")
+
+	addMovieAvailable := func() []any {
+
+		datas := make([]any, 0)
+
+		for i := 0; i < len(req); i++ {
+			for x := 0; x < dayLength; x++ {
+				data := movie.MovieAvaliable{
+					Movie_Id:  lastInsertId.Hex(),
+					Title:     req[i].Title,
+					CreatedAt: utils.GetLocaltime(),
+					UpdatedAt: func() time.Time {
+						return utils.GetLocaltime()
+					}(),
+					Showtime: utils.SetSpecificTime(req[i].ReleaseAt.Year(), req[i].ReleaseAt.Month(), req[i].ReleaseAt.Day()+int(math.Floor(float64(x)/2)), 10+i, 30, 0),
+					//Need Refactor
+					SeatAvailable: []movie.SeatAvailable{
+						{"A1": true},
+						{"A2": true},
+						{"A3": true},
+						{"A4": true},
+						{"A5": true},
+						{"A6": true},
+						{"A7": true},
+						{"A8": true},
+						{"A9": true},
+						{"A10": true},
+						{"A11": true},
+						{"A12": true},
+						{"B1": true},
+						{"B2": true},
+						{"B3": true},
+						{"B4": true},
+						{"B5": true},
+						{"B6": true},
+						{"B7": true},
+						{"B8": true},
+						{"B9": true},
+						{"B10": true},
+						{"B11": true},
+						{"B12": true},
+						{"C1": true},
+						{"C2": true},
+						{"C3": true},
+						{"C4": true},
+						{"C5": true},
+						{"C6": true},
+						{"C7": true},
+						{"C8": true},
+						{"C9": true},
+						{"C10": true},
+						{"C11": true},
+						{"C12": true},
+						{"D1": true},
+						{"D2": true},
+						{"D3": true},
+						{"D4": true},
+						{"D5": true},
+						{"D6": true},
+						{"D7": true},
+						{"D8": true},
+						{"D9": true},
+						{"D10": true},
+						{"D11": true},
+						{"D12": true},
+					},
+				}
+
+				datas = append(datas, data)
+			}
+		}
+
+		return datas
+
+	}()
+
+	_, err = col.InsertMany(ctx, addMovieAvailable)
 
 	if err != nil {
 		log.Printf("Error: Count Documents failed: %v", err)
 		return errors.New("error: countDocuments failed")
 	}
 
-	log.Println("item id is", result.InsertedID)
+	log.Println("first item id is", lastInsertId)
 
 	return nil
 
 }
+
+// func (r *moviesrepository) InsertMovies(pctx context.Context, req []*movie.Movie) error {
+
+// 	ctx, cancel := context.WithTimeout(pctx, time.Second*10)
+// 	defer cancel()
+
+// 	db := r.db.Database("movie_db")
+// 	col := db.Collection("movie")
+
+// 	result, err := col.InsertMany(ctx, req)
+
+// 	return nil
+// }
 
 func (r *moviesrepository) FindOneMovie(pctx context.Context, movieId string) (*movie.MovieShowCase, error) {
 
@@ -175,19 +214,26 @@ func (r *moviesrepository) FindOneMovie(pctx context.Context, movieId string) (*
 
 func (r *moviesrepository) FindAllMovie(pctx context.Context, filter any) ([]*movie.MovieData, error) {
 
-	ctx, cancel := context.WithTimeout(pctx, time.Second*20)
+	ctx, cancel := context.WithTimeout(pctx, time.Second*30)
 	defer cancel()
 
 	db := r.db.Database("movie_db")
 	col := db.Collection("movie")
+
+	results := make([]*movie.MovieData, 0)
+
+	value, err := r.redis.Get(ctx, "movies_list").Result()
+	if err == nil {
+		if err = json.Unmarshal([]byte(value), &results); err == nil {
+			return results, nil
+		}
+	}
 
 	cursor, err := col.Find(ctx, filter)
 	if err != nil {
 		log.Printf("Error: Find All Movie Failed: %s", err.Error())
 		return make([]*movie.MovieData, 0), errors.New("error: find all item failed")
 	}
-
-	results := make([]*movie.MovieData, 0)
 
 	for cursor.Next(ctx) {
 		result := new(movie.Movie)
@@ -197,11 +243,22 @@ func (r *moviesrepository) FindAllMovie(pctx context.Context, filter any) ([]*mo
 		}
 
 		results = append(results, &movie.MovieData{
-			MovieId:  result.Id.Hex(),
-			Title:    result.Title,
-			Price:    result.Price,
-			ImageUrl: result.ImageUrl,
+			MovieId:    result.Id.Hex(),
+			Title:      result.Title,
+			Release_At: utils.GetStringTime(result.ReleaseAt),
+			Price:      result.Price,
+			ImageUrl:   result.ImageUrl,
 		})
+	}
+
+	data, err := json.Marshal(results)
+	if err != nil {
+		return make([]*movie.MovieData, 0), errors.New("error: find all item failed")
+	}
+
+	_, err = r.redis.Set(ctx, "movies_list", string(data), time.Second*30).Result()
+	if err != nil {
+		return make([]*movie.MovieData, 0), errors.New("error: set redis failed")
 	}
 
 	return results, nil
@@ -215,13 +272,20 @@ func (r *moviesrepository) FindComingSoonMovie(pctx context.Context, filter any)
 	db := r.db.Database("movie_db")
 	col := db.Collection("movie")
 
+	results := make([]*movie.MovieData, 0)
+
+	value, err := r.redis.Get(ctx, "comingsoon_list").Result()
+	if err == nil {
+		if err = json.Unmarshal([]byte(value), &results); err == nil {
+			return results, nil
+		}
+	}
+
 	cursor, err := col.Find(ctx, filter)
 	if err != nil {
 		log.Printf("Error: Find Coming SoonMovie Failed: %s", err.Error())
 		return make([]*movie.MovieData, 0), nil
 	}
-
-	results := make([]*movie.MovieData, 0)
 
 	for cursor.Next(ctx) {
 		result := new(movie.Movie)
@@ -237,6 +301,16 @@ func (r *moviesrepository) FindComingSoonMovie(pctx context.Context, filter any)
 			ImageUrl: result.ImageUrl,
 		})
 
+	}
+
+	data, err := json.Marshal(results)
+	if err != nil {
+		return make([]*movie.MovieData, 0), errors.New("error: find comign soon movies failed")
+	}
+
+	_, err = r.redis.Set(ctx, "comingsoon_list", string(data), time.Second*30).Result()
+	if err != nil {
+		return make([]*movie.MovieData, 0), errors.New("error: set redis failed")
 	}
 
 	return results, nil
@@ -272,6 +346,7 @@ func (r *moviesrepository) FindMovieShowtime(pctx context.Context, movieId strin
 			Title:         result.Title,
 			ShowTime:      utils.GetStringTime(result.Showtime),
 			SeatAvailable: result.SeatAvailable,
+			IsComingSoon:  true,
 		})
 
 	}

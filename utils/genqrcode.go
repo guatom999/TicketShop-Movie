@@ -8,6 +8,8 @@ import (
 )
 
 func GenQRCode(price int) string {
+
+	price = price / 100
 	PrompPayKey := crc16.Params{0x1021, 0xFFFF, false, false, 0x0000, 0x0000, "CRC-16/XMODEM"}
 	table := crc16.MakeTable(PrompPayKey)
 

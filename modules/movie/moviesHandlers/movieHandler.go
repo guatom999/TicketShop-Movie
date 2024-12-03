@@ -32,9 +32,11 @@ func NewMoviesHandler(moviesUseCase moviesUseCases.MoviesUseCaseService) MoviesH
 func (h *moviesHandler) AddOneMovie(c echo.Context) error {
 	ctx := context.Background()
 
-	req := new(movie.AddMovieReq)
+	// req := new(movie.AddMovieReq)
+	req := make([]*movie.AddMovieReq, 0)
 
-	if err := c.Bind(req); err != nil {
+	if err := c.Bind(&req); err != nil {
+		c.Logger().Error("Bind failed %s", err.Error())
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
 

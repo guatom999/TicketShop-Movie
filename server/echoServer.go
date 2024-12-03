@@ -14,6 +14,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/omise/omise-go"
+	"github.com/redis/go-redis/v9"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -27,6 +28,7 @@ type (
 		db    *mongo.Client
 		cfg   *config.Config
 		omise *omise.Client
+		redis *redis.Client
 	}
 )
 
@@ -34,12 +36,14 @@ func NewEchoServer(
 	db *mongo.Client,
 	cfg *config.Config,
 	omise *omise.Client,
+	redis *redis.Client,
 ) Server {
 	return &server{
 		app:   echo.New(),
 		db:    db,
 		cfg:   cfg,
 		omise: omise,
+		redis: redis,
 	}
 }
 

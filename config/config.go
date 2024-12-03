@@ -15,6 +15,7 @@ type (
 		Kafka Kafka
 		Omise Omise
 		Gcp   Gcp
+		Redis Redis
 	}
 
 	App struct {
@@ -47,6 +48,10 @@ type (
 	Gcp struct {
 		BucketName string
 		FileLimit  int64
+	}
+
+	Redis struct {
+		RedisUrl string
 	}
 )
 
@@ -91,6 +96,9 @@ func GetConfig(path string) Config {
 		Gcp: Gcp{
 			BucketName: viper.GetString("APP_GCP_BUCKET"),
 			FileLimit:  int64(viper.GetInt("APP_FILE_LIMIT")),
+		},
+		Redis: Redis{
+			RedisUrl: viper.GetString("REDIS_URL"),
 		},
 	}
 }
