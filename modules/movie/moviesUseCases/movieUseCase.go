@@ -34,12 +34,6 @@ func NewmoviesUseCase(moviesRepo moviesRepositories.MoviesRepositoryService) Mov
 
 func (u *moviesUseCase) AddOneMovie(pctx context.Context, req []*movie.AddMovieReq) error {
 
-	// splitDate := strings.Split(req.ReleaseAt, "-")
-
-	// for _, v := range splitDate {
-	// 	fmt.Println("test splitdate", v)
-	// }
-
 	movieEntity := make([]*movie.Movie, 0)
 
 	for i := 0; i < len(req); i++ {
@@ -57,25 +51,9 @@ func (u *moviesUseCase) AddOneMovie(pctx context.Context, req []*movie.AddMovieR
 		})
 	}
 
-	if err := u.moviesRepo.InsertMovie(pctx, movieEntity); err != nil {
+	if err := u.moviesRepo.InsertMovie(pctx, movieEntity, req[0].MoviesRoundPerDay); err != nil {
 		return err
 	}
-
-	// if err := u.moviesRepo.InsertMovie(pctx, &movie.Movie{
-	// 	Title:           req.Title,
-	// 	Description:     req.Description,
-	// 	RunningTime:     req.RunningTime,
-	// 	Price:           req.Price,
-	// 	ImageUrl:        req.ImageUrl,
-	// 	CreatedAt:       time.Now(),
-	// 	UpdatedAt:       time.Now(),
-	// 	Category:        "RomCom",
-	// 	ReleaseAt:       utils.ConvertStringDateToTime(req.ReleaseAt),
-	// 	OutOfTheatersAt: utils.ConvertStringDateToTime(req.OutOfTheatersAt),
-	// }); err != nil {
-	// 	return err
-	// }
-
 	return nil
 }
 
