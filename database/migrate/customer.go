@@ -23,7 +23,7 @@ func CustomerMigrate(pctx context.Context, cfg *config.Config) {
 		mocksDatas := []customer.Customer{
 			{
 				UserName: "customer1",
-				Email:    "test1234@hotamil.com",
+				Email:    "test1234@hotmail.com",
 				Password: func() string {
 
 					hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("test1234"), 10)
