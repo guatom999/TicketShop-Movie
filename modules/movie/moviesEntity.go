@@ -21,6 +21,19 @@ type (
 		OutOfTheatersAt time.Time          `json:"out_of_theaters_at" bson:"out_of_theaters_at"`
 	}
 
+	MovieNews struct {
+		Id          primitive.ObjectID `json:"_id" bson:"_id,omitempty"`
+		NewsName    string             `json:"news_name" bson:"news_name"`
+		Date        time.Time          `json:"date" bson:"news_date"`
+		Description string             `json:"description" bson:"news_description"`
+		MoreDetails []string           `json:"more_details" bson:"news_more_details"`
+		CreatedAt   time.Time          `json:"created_at" bson:"created_at"`
+		UpdatedAt   time.Time          `json:"updated_at" bson:"updated_at"`
+	}
+
+	MoviePromotions struct {
+	}
+
 	MovieAvaliable struct {
 		Id            primitive.ObjectID `json:"_id" bson:"_id,omitempty"`
 		Movie_Id      string             `json:"movie_id" bson:"movie_id"`

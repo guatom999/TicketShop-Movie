@@ -2,18 +2,47 @@ package jwtauth
 
 import (
 	"errors"
+	"time"
 
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/guatom999/TicketShop-Movie/utils"
 )
 
 type (
+	AuthInterface interface {
+		SignToken() string
+	}
+	Claims struct {
+		CustomerId string `json:"customer_id"`
+	}
+
 	CustomerClaims struct {
-		Id      string `json:"customer_id"`
-		Email   string `json:"email"`
-		UserNam string `json:"username"`
+		*Claims
 		jwt.RegisteredClaims
 	}
+
+	authConcrete struct {
+		Secret []byte
+		Claims *CustomerClaims
+	}
+
+	accessToken struct {
+		*authConcrete
+	}
+
+	refreshToken struct {
+		*authConcrete
+	}
 )
+
+func (a *authConcrete) SignToken() string {
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, a.Claims)
+
+	tokenString, _ := token.SignedString(a.Claims)
+
+	return tokenString
+}
 
 func ParseToken(secret string, tokenString string) (*CustomerClaims, error) {
 
@@ -42,4 +71,61 @@ func ParseToken(secret string, tokenString string) (*CustomerClaims, error) {
 
 	}
 
+}
+
+func NewAccessToken(secret string, expireAt int64, claims *Claims) AuthInterface {
+	return &accessToken{
+		authConcrete: &authConcrete{
+			Secret: []byte(secret),
+			Claims: &CustomerClaims{
+				Claims: claims,
+				RegisteredClaims: jwt.RegisteredClaims{
+					Issuer:    "seeyarnmirttown.com",
+					Subject:   "access-token",
+					Audience:  []string{"seeyarnmirttown.com"},
+					ExpiresAt: jwt.NewNumericDate(utils.GetLocaltime().Add(time.Second * 20)),
+					NotBefore: jwt.NewNumericDate(utils.GetLocaltime()),
+					IssuedAt:  jwt.NewNumericDate(utils.GetLocaltime()),
+				},
+			},
+		},
+	}
+}
+
+func NewRefreshToken(secret string, expireAt int64, claims *Claims) AuthInterface {
+	return &refreshToken{
+		authConcrete: &authConcrete{
+			Secret: []byte(secret),
+			Claims: &CustomerClaims{
+				Claims: claims,
+				RegisteredClaims: jwt.RegisteredClaims{
+					Issuer:    "seeyarnmirttown.com",
+					Subject:   "access-token",
+					Audience:  []string{"seeyarnmirttown.com"},
+					ExpiresAt: jwt.NewNumericDate(utils.GetLocaltime().Add(time.Second * 20)),
+					NotBefore: jwt.NewNumericDate(utils.GetLocaltime()),
+					IssuedAt:  jwt.NewNumericDate(utils.GetLocaltime()),
+				},
+			},
+		},
+	}
+}
+
+func ReloadToken(secret string, expireAt int64, claims *Claims) AuthInterface {
+	return &refreshToken{
+		authConcrete: &authConcrete{
+			Secret: []byte(secret),
+			Claims: &CustomerClaims{
+				Claims: claims,
+				RegisteredClaims: jwt.RegisteredClaims{
+					Issuer:    "seeyarnmirttown.com",
+					Subject:   "access-token",
+					Audience:  []string{"seeyarnmirttown.com"},
+					ExpiresAt: jwt.NewNumericDate(utils.GetLocaltime().Add(time.Second * 20)),
+					NotBefore: jwt.NewNumericDate(utils.GetLocaltime()),
+					IssuedAt:  jwt.NewNumericDate(utils.GetLocaltime()),
+				},
+			},
+		},
+	}
 }

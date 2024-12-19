@@ -30,3 +30,14 @@ func Request(url string) (string, error) {
 
 	return string(body), nil
 }
+
+func Post(url string, body any) error {
+
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+
+	_ = client
+
+	return nil
+}

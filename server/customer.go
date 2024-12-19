@@ -7,12 +7,16 @@ import (
 )
 
 func (s *server) CustomerModules() {
-	customerRepo := customerRepositories.NewCustomerRepository(s.db)
+	customerRepo := customerRepositories.NewCustomerRepository(s.db, s.cfg)
 	customerUseCase := customerUseCases.NewCustomerUseCase(customerRepo, s.cfg)
-	customerHandler := customerHandlers.NewCustomerHandler(customerUseCase)
+	customerHandler := customerHandlers.NewCustomerHandler(customerUseCase, s.cfg)
 
 	customerRouter := s.app.Group("/user")
 
+	// customerRouter.GET("/test-token" , )
+
+	customerRouter.GET("/testjwt", customerHandler.TestJwtAuthorize, customerHandler.TestMilddeware)
+	// customerRouter.GET("/testjwt", customerHandler.TestJwtAuthorize)
 	customerRouter.POST("/login", customerHandler.Login)
 	customerRouter.POST("/register", customerHandler.Register)
 

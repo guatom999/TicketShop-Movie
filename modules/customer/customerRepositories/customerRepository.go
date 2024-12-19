@@ -20,9 +20,12 @@ type (
 	CustomerRepositoryService interface {
 		FindOneCustomerWithCredential(pctx context.Context, email string) (*customer.Customer, error)
 		InsertCustomer(pctx context.Context, req *customer.Customer) (primitive.ObjectID, error)
-		AccessToken(cfg *config.Config, customerPassport *customer.Claims) string
-		RefreshToken(cfg *config.Config, customerPassport *customer.Claims) string
+		// FindCustomerAccessToken(pctx context.Context, accessToken string) (*customer.Credential, error)
+		FindCustomerRefreshToken(pctx context.Context, customerId string) (*customer.Customer, error)
 		InsertCustomerCredential(pctx context.Context, req *customer.Credential) (primitive.ObjectID, error)
+		FindAccessToken(pctx context.Context, accessToken string) (*customer.Credential, error)
+		NewAccessToken(cfg *config.Config, customerPassport *customer.Claims) string
+		NewRefreshToken(cfg *config.Config, customerPassport *customer.Claims) string
 	}
 
 	customerRepository struct {
@@ -31,9 +34,9 @@ type (
 	}
 )
 
-func NewCustomerRepository(db *mongo.Client) CustomerRepositoryService {
+func NewCustomerRepository(db *mongo.Client, cfg *config.Config) CustomerRepositoryService {
 
-	return &customerRepository{db: db}
+	return &customerRepository{db: db, cfg: cfg}
 
 }
 
@@ -107,7 +110,25 @@ func (r *customerRepository) FindOneCustomerWithCredential(pctx context.Context,
 	return result, nil
 }
 
-func (r *customerRepository) AccessToken(cfg *config.Config, customerPassport *customer.Claims) string {
+func (r *customerRepository) FindCustomerRefreshToken(pctx context.Context, customerId string) (*customer.Customer, error) {
+
+	ctx, cancel := context.WithTimeout(pctx, time.Second*10)
+	defer cancel()
+
+	db := r.db.Database("customer_db")
+	col := db.Collection("customer")
+
+	result := new(customer.Customer)
+
+	if err := col.FindOne(ctx, bson.M{"_id": customerId}).Decode(result); err != nil {
+		log.Printf("Error: FindCustomerRefreshToken Failed %s", err.Error())
+		return nil, errors.New("error: find customer for refresh failed")
+	}
+
+	return result, nil
+}
+
+func (r *customerRepository) NewAccessToken(cfg *config.Config, customerPassport *customer.Claims) string {
 
 	claims := customer.AuthClaims{
 		Claims: &customer.Claims{
@@ -135,7 +156,7 @@ func (r *customerRepository) AccessToken(cfg *config.Config, customerPassport *c
 	return accessToken
 }
 
-func (r *customerRepository) RefreshToken(cfg *config.Config, customerPassport *customer.Claims) string {
+func (r *customerRepository) NewRefreshToken(cfg *config.Config, customerPassport *customer.Claims) string {
 	claims := customer.AuthClaims{
 		Claims: &customer.Claims{
 			Id:       customerPassport.Id,
@@ -160,6 +181,24 @@ func (r *customerRepository) RefreshToken(cfg *config.Config, customerPassport *
 	}
 
 	return refreshToken
+}
+
+func (r *customerRepository) FindAccessToken(pctx context.Context, accessToken string) (*customer.Credential, error) {
+	ctx, cancel := context.WithTimeout(pctx, time.Second*10)
+	defer cancel()
+
+	db := r.db.Database("customer_db")
+	col := db.Collection("customer_auth")
+
+	result := new(customer.Credential)
+
+	if err := col.FindOne(ctx, bson.M{"access_token": accessToken}).Decode(result); err != nil {
+		log.Printf("Error: FindAccessToken Failed %s", err.Error())
+		return nil, errors.New("error: email or password invalid")
+	}
+
+	return result, nil
+
 }
 
 func (r *customerRepository) InsertCustomer(pctx context.Context, req *customer.Customer) (primitive.ObjectID, error) {

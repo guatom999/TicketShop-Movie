@@ -3,7 +3,9 @@ package customerHandlers
 import (
 	"context"
 	"net/http"
+	"strings"
 
+	"github.com/guatom999/TicketShop-Movie/config"
 	"github.com/guatom999/TicketShop-Movie/modules/customer"
 	"github.com/guatom999/TicketShop-Movie/modules/customer/customerUseCases"
 	"github.com/labstack/echo/v4"
@@ -12,16 +14,24 @@ import (
 type (
 	CustomerHandlerService interface {
 		Login(c echo.Context) error
+		// FindAccessToken(c echo.Context) error
+		// RefreshToken(c echo.Context) error
+		TestMilddeware(next echo.HandlerFunc) echo.HandlerFunc
+		TestJwtAuthorize(c echo.Context) error
 		Register(c echo.Context) error
 	}
 
 	customerHandler struct {
 		customerUseCase customerUseCases.CustomerUseCaseService
+		cfg             *config.Config
 	}
 )
 
-func NewCustomerHandler(customerUseCase customerUseCases.CustomerUseCaseService) CustomerHandlerService {
-	return &customerHandler{customerUseCase: customerUseCase}
+func NewCustomerHandler(customerUseCase customerUseCases.CustomerUseCaseService, cfg *config.Config) CustomerHandlerService {
+	return &customerHandler{
+		customerUseCase: customerUseCase,
+		cfg:             cfg,
+	}
 }
 
 func (h *customerHandler) Login(c echo.Context) error {
@@ -40,6 +50,25 @@ func (h *customerHandler) Login(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, res)
+}
+
+func (h *customerHandler) TestJwtAuthorize(c echo.Context) error {
+
+	return c.JSON(http.StatusOK, "test success")
+}
+
+func (h *customerHandler) TestMilddeware(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		accessToken := strings.TrimPrefix(c.Request().Header.Get("Authorization"), "Bearer ")
+
+		result, err := h.customerUseCase.TestMiddleware(c, accessToken)
+		if err != nil {
+			return c.JSON(http.StatusUnauthorized, err.Error())
+		}
+
+		return next(result)
+
+	}
 }
 
 func (h *customerHandler) Register(c echo.Context) error {

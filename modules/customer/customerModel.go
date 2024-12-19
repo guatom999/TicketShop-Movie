@@ -31,6 +31,11 @@ type (
 		RefreshToken string `json:"refresh_token"`
 	}
 
+	CustomerRefreshTokenReq struct {
+		CustomerId   string `json:"customer_id" form:"customer_id" `
+		RefreshToken string `json:"refresh_token" form:"refresh_token" `
+	}
+
 	// TokenRes struct {
 	// 	AccessToken  string `json:"access_token"`
 	// 	RefreshToken string `json:"refresh_token"`
