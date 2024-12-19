@@ -18,6 +18,7 @@ type (
 
 	CustomerProfile struct {
 		Id         string         `json:"_id"`
+		CustomerId string         `json:"customer_id"`
 		Email      string         `json:"email"`
 		UserName   string         `json:"user_name"`
 		ImageUrl   string         `json:"image_url"`
@@ -32,6 +33,7 @@ type (
 	}
 
 	CustomerRefreshTokenReq struct {
+		CredentailId string `json:"credentail_id" form:"credentail_id"`
 		CustomerId   string `json:"customer_id" form:"customer_id" `
 		RefreshToken string `json:"refresh_token" form:"refresh_token" `
 	}

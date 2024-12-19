@@ -19,9 +19,7 @@ type (
 	}
 
 	Claims struct {
-		Id       string `json:"customer_id"`
-		UserName string `json:"username"`
-		// jwt.RegisteredClaims
+		Id string `json:"customer_id"`
 	}
 
 	Credential struct {
@@ -32,6 +30,13 @@ type (
 		RefreshToken string             `bson:"refresh_token"`
 		CreatedAt    time.Time          `bson:"created_at"`
 		UpdatedAt    time.Time          `bson:"updated_at"`
+	}
+
+	UpdateRefreshToken struct {
+		CustomerId   string    `bson:"customer_id"`
+		AccessToken  string    `bson:"access_token"`
+		RefreshToken string    `bson:"refresh_token"`
+		UpdatedAt    time.Time `bson:"updated_at"`
 	}
 
 	AuthClaims struct {
