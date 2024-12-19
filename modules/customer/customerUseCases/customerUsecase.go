@@ -3,7 +3,9 @@ package customerUseCases
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
+	"strings"
 
 	"github.com/guatom999/TicketShop-Movie/config"
 	"github.com/guatom999/TicketShop-Movie/modules/customer"
@@ -51,34 +53,40 @@ func (u *customerUseCase) Login(pctx context.Context, req *customer.LoginReq) (*
 	}
 
 	accessToken := u.customerRepo.NewAccessToken(u.cfg, &customer.Claims{
-		Id:       result.Id.Hex(),
-		UserName: result.UserName,
+		Id: result.Id.Hex(),
 	})
 
 	refreshToken := u.customerRepo.NewRefreshToken(u.cfg, &customer.Claims{
-		Id:       result.Id.Hex(),
-		UserName: result.UserName,
+		Id: result.Id.Hex(),
 	})
 
-	u.customerRepo.InsertCustomerCredential(pctx, &customer.Credential{
+	credential, _ := u.customerRepo.InsertCustomerCredential(pctx, &customer.Credential{
 		CustomerId:   customerId,
 		Rolecode:     1,
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 	})
 
+	customerCredential, err := u.customerRepo.FindCustomerCredential(pctx, credential.Hex())
+	if err != nil {
+		return nil, err
+	}
+
+	// loc, _ := time.LoadLocation("Asia/Bangkok")
+
 	return &customer.CustomerProfileRes{
 		Status: "ok",
 		CustomerProfile: &customer.CustomerProfile{
-			Id:         result.Id.Hex(),
+			Id:         credential.Hex(),
+			CustomerId: customerId,
 			Email:      result.Email,
 			ImageUrl:   result.ImageUrl,
 			UserName:   result.UserName,
 			Created_At: utils.GetStringTime(result.Created_At),
 			Updated_At: utils.GetStringTime(result.Updated_At),
 			Credential: &customer.CredentailRes{
-				AccessToken:  accessToken,
-				RefreshToken: refreshToken,
+				AccessToken:  customerCredential.AccessToken,
+				RefreshToken: customerCredential.RefreshToken,
 			},
 		},
 	}, nil
@@ -86,12 +94,14 @@ func (u *customerUseCase) Login(pctx context.Context, req *customer.LoginReq) (*
 
 func (u *customerUseCase) RefreshToken(pctx context.Context, req *customer.CustomerRefreshTokenReq) (*customer.CustomerProfileRes, error) {
 
-	claims, err := jwtauth.ParseToken(u.cfg.Jwt.RefreshSecretKey, req.RefreshToken)
+	_, err := jwtauth.ParseToken(u.cfg.Jwt.RefreshSecretKey, req.RefreshToken)
 	if err != nil {
 		return nil, err
 	}
 
-	customerProfile, err := u.customerRepo.FindCustomerRefreshToken(pctx, claims.Id)
+	fmt.Println("after trim Prefix is", strings.TrimPrefix(req.CustomerId, "customer:"))
+
+	customerProfile, err := u.customerRepo.FindCustomerRefreshToken(pctx, strings.TrimPrefix(req.CustomerId, "customer:"))
 	if err != nil {
 		return nil, err
 	}
@@ -99,11 +109,43 @@ func (u *customerUseCase) RefreshToken(pctx context.Context, req *customer.Custo
 	customerId := "customer:" + customerProfile.Id.Hex()
 
 	accessToken := u.customerRepo.NewAccessToken(u.cfg, &customer.Claims{
-		Id:       customerId,
-		UserName: customerProfile.UserName,
+		Id: customerId,
 	})
 
-	return nil, nil
+	refreshToken := u.customerRepo.ReloadToken(u.cfg, &customer.Claims{
+		Id: customerId,
+	})
+
+	if err := u.customerRepo.UpdateCustomerCredential(pctx, req.CredentialId, &customer.UpdateRefreshToken{
+		CustomerId:   customerProfile.Id.Hex(),
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+		UpdatedAt:    utils.GetLocaltime(),
+	}); err != nil {
+		return nil, err
+	}
+
+	customerCredential, err := u.customerRepo.FindCustomerCredential(pctx, req.CredentialId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &customer.CustomerProfileRes{
+		Status: "ok",
+		CustomerProfile: &customer.CustomerProfile{
+			Id:         customerProfile.Id.Hex(),
+			CustomerId: customerId,
+			Email:      customerProfile.Email,
+			ImageUrl:   customerProfile.ImageUrl,
+			UserName:   customerProfile.UserName,
+			Created_At: utils.GetStringTime(customerProfile.Created_At),
+			Updated_At: utils.GetStringTime(customerProfile.Updated_At),
+			Credential: &customer.CredentailRes{
+				AccessToken:  customerCredential.AccessToken,
+				RefreshToken: customerCredential.RefreshToken,
+			},
+		},
+	}, nil
 }
 
 func (u *customerUseCase) TestMiddleware(c echo.Context, accessToken string) (echo.Context, error) {
@@ -126,7 +168,7 @@ func (u *customerUseCase) TestMiddleware(c echo.Context, accessToken string) (ec
 	}
 
 	// fmt.Println("customer_id is", claims.Id)
-	c.Set("customer_id", claims.Id)
+	c.Set("customer_id", claims.CustomerId)
 
 	return c, nil
 }

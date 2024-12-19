@@ -9,11 +9,13 @@ import (
 	"github.com/guatom999/TicketShop-Movie/modules/customer"
 	"github.com/guatom999/TicketShop-Movie/modules/customer/customerUseCases"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/gommon/log"
 )
 
 type (
 	CustomerHandlerService interface {
 		Login(c echo.Context) error
+		RefreshToken(c echo.Context) error
 		// FindAccessToken(c echo.Context) error
 		// RefreshToken(c echo.Context) error
 		TestMilddeware(next echo.HandlerFunc) echo.HandlerFunc
@@ -55,6 +57,25 @@ func (h *customerHandler) Login(c echo.Context) error {
 func (h *customerHandler) TestJwtAuthorize(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, "test success")
+}
+
+func (h *customerHandler) RefreshToken(c echo.Context) error {
+
+	ctx := context.Background()
+
+	req := new(customer.CustomerRefreshTokenReq)
+
+	if err := c.Bind(req); err != nil {
+		log.Printf("req wrong cause of :++++>", err.Error())
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+
+	res, err := h.customerUseCase.RefreshToken(ctx, req)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, res)
 }
 
 func (h *customerHandler) TestMilddeware(next echo.HandlerFunc) echo.HandlerFunc {

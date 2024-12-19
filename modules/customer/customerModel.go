@@ -33,8 +33,8 @@ type (
 	}
 
 	CustomerRefreshTokenReq struct {
-		CredentailId string `json:"credentail_id" form:"credentail_id"`
-		CustomerId   string `json:"customer_id" form:"customer_id" `
+		CredentialId string `json:"credential_id" form:"credential_id"`
+		CustomerId   string `json:"player_id" validate:"required,max=128"`
 		RefreshToken string `json:"refresh_token" form:"refresh_token" `
 	}
 

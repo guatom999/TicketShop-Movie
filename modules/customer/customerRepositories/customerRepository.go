@@ -163,7 +163,7 @@ func (r *customerRepository) FindCustomerRefreshToken(pctx context.Context, cust
 
 	result := new(customer.Customer)
 
-	if err := col.FindOne(ctx, bson.M{"_id": customerId}).Decode(result); err != nil {
+	if err := col.FindOne(ctx, bson.M{"_id": utils.ConvertStringToObjectId(customerId)}).Decode(result); err != nil {
 		log.Printf("Error: FindCustomerRefreshToken Failed %s", err.Error())
 		return nil, errors.New("error: find customer for refresh failed")
 	}
@@ -242,7 +242,7 @@ func (r *customerRepository) ReloadToken(cfg *config.Config, customerPassport *c
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	reloadToken, err := token.SignedString(cfg.Jwt.RefreshSecretKey)
+	reloadToken, err := token.SignedString([]byte(cfg.Jwt.RefreshSecretKey))
 	if err != nil {
 		log.Printf("Error: Reoload Token Failed %s", err.Error())
 		return err.Error()
