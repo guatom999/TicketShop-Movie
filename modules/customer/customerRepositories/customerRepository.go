@@ -20,12 +20,14 @@ type (
 	CustomerRepositoryService interface {
 		FindOneCustomerWithCredential(pctx context.Context, email string) (*customer.Customer, error)
 		InsertCustomer(pctx context.Context, req *customer.Customer) (primitive.ObjectID, error)
-		// FindCustomerAccessToken(pctx context.Context, accessToken string) (*customer.Credential, error)
 		FindCustomerRefreshToken(pctx context.Context, customerId string) (*customer.Customer, error)
 		InsertCustomerCredential(pctx context.Context, req *customer.Credential) (primitive.ObjectID, error)
 		FindAccessToken(pctx context.Context, accessToken string) (*customer.Credential, error)
+		FindCustomerCredential(pctx context.Context, credentialId string) (*customer.Credential, error)
+		UpdateCustomerCredential(pctx context.Context, credentialId string, req *customer.UpdateRefreshToken) error
 		NewAccessToken(cfg *config.Config, customerPassport *customer.Claims) string
 		NewRefreshToken(cfg *config.Config, customerPassport *customer.Claims) string
+		ReloadToken(cfg *config.Config, customerPassport *customer.Claims) string
 	}
 
 	customerRepository struct {
@@ -90,6 +92,47 @@ func (r *customerRepository) InsertCustomerCredential(pctx context.Context, req 
 	return result.InsertedID.(primitive.ObjectID), nil
 }
 
+func (r *customerRepository) FindCustomerCredential(pctx context.Context, credentialId string) (*customer.Credential, error) {
+
+	ctx, cancel := context.WithTimeout(pctx, time.Second*20)
+	defer cancel()
+
+	db := r.db.Database("customer_db")
+	col := db.Collection("customer_auth")
+
+	result := new(customer.Credential)
+
+	if err := col.FindOne(ctx, bson.M{"_id": utils.ConvertStringToObjectId(credentialId)}).Decode(result); err != nil {
+		log.Printf("Error: FindCustomerCredential Failed %s", err.Error())
+		return nil, errors.New("error: find  customer credential failed")
+	}
+
+	return result, nil
+}
+
+func (r *customerRepository) UpdateCustomerCredential(pctx context.Context, credentialId string, req *customer.UpdateRefreshToken) error {
+
+	ctx, cancel := context.WithTimeout(pctx, time.Second*20)
+	defer cancel()
+
+	db := r.db.Database("customer_db")
+	col := db.Collection("customer_auth")
+
+	_, err := col.UpdateOne(ctx, bson.M{"_id": utils.ConvertStringToObjectId(credentialId)}, bson.M{"$set": bson.M{
+		// "customer_id":   "customer:" + req.CustomerId,
+		"access_token":  req.AccessToken,
+		"refresh_token": req.RefreshToken,
+		"updated_at":    req.UpdatedAt,
+	}})
+
+	if err != nil {
+		log.Printf("Error: UpdateCustomerCredential Failed %s", err.Error())
+		return errors.New("error: update customer credential failed")
+	}
+
+	return nil
+}
+
 func (r *customerRepository) FindOneCustomerWithCredential(pctx context.Context, email string) (*customer.Customer, error) {
 
 	ctx, cancel := context.WithTimeout(pctx, time.Second*20)
@@ -132,8 +175,7 @@ func (r *customerRepository) NewAccessToken(cfg *config.Config, customerPassport
 
 	claims := customer.AuthClaims{
 		Claims: &customer.Claims{
-			Id:       customerPassport.Id,
-			UserName: customerPassport.UserName,
+			Id: customerPassport.Id,
 		},
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    "seeyarnmirttown.com",
@@ -159,8 +201,7 @@ func (r *customerRepository) NewAccessToken(cfg *config.Config, customerPassport
 func (r *customerRepository) NewRefreshToken(cfg *config.Config, customerPassport *customer.Claims) string {
 	claims := customer.AuthClaims{
 		Claims: &customer.Claims{
-			Id:       customerPassport.Id,
-			UserName: customerPassport.UserName,
+			Id: customerPassport.Id,
 		},
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    "seeyarnmirttown.com",
@@ -181,6 +222,33 @@ func (r *customerRepository) NewRefreshToken(cfg *config.Config, customerPasspor
 	}
 
 	return refreshToken
+}
+
+func (r *customerRepository) ReloadToken(cfg *config.Config, customerPassport *customer.Claims) string {
+
+	claims := customer.AuthClaims{
+		Claims: &customer.Claims{
+			Id: customerPassport.Id,
+		},
+		RegisteredClaims: jwt.RegisteredClaims{
+			Issuer:    "seeyarnmirttown.com",
+			Subject:   "refresh-token",
+			Audience:  []string{"seeyarnmirttown.com"},
+			ExpiresAt: jwt.NewNumericDate(utils.GetLocaltime().Add(time.Second * 60)),
+			NotBefore: jwt.NewNumericDate(utils.GetLocaltime()),
+			IssuedAt:  jwt.NewNumericDate(utils.GetLocaltime()),
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	reloadToken, err := token.SignedString(cfg.Jwt.RefreshSecretKey)
+	if err != nil {
+		log.Printf("Error: Reoload Token Failed %s", err.Error())
+		return err.Error()
+	}
+
+	return reloadToken
 }
 
 func (r *customerRepository) FindAccessToken(pctx context.Context, accessToken string) (*customer.Credential, error) {
