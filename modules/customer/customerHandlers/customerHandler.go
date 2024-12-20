@@ -2,6 +2,7 @@ package customerHandlers
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -16,6 +17,7 @@ type (
 	CustomerHandlerService interface {
 		Login(c echo.Context) error
 		RefreshToken(c echo.Context) error
+		Logout(c echo.Context) error
 		// FindAccessToken(c echo.Context) error
 		// RefreshToken(c echo.Context) error
 		TestMilddeware(next echo.HandlerFunc) echo.HandlerFunc
@@ -76,6 +78,24 @@ func (h *customerHandler) RefreshToken(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, res)
+}
+
+func (h *customerHandler) Logout(c echo.Context) error {
+
+	ctx := context.Background()
+
+	req := new(customer.LogoutReq)
+
+	if err := c.Bind(req); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+
+	res, err := h.customerUseCase.Logout(ctx, req.CredentialId)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, fmt.Sprintf("Logout success Deleted user count %d", res))
 }
 
 func (h *customerHandler) TestMilddeware(next echo.HandlerFunc) echo.HandlerFunc {

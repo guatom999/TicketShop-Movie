@@ -20,6 +20,7 @@ import (
 type (
 	CustomerUseCaseService interface {
 		Login(pctx context.Context, req *customer.LoginReq) (*customer.CustomerProfileRes, error)
+		Logout(pctx context.Context, credentialId string) (int64, error)
 		Register(pctx context.Context, req *customer.RegisterReq) (primitive.ObjectID, error)
 		RefreshToken(pctx context.Context, req *customer.CustomerRefreshTokenReq) (*customer.CustomerProfileRes, error)
 		TestMiddleware(c echo.Context, accessToken string) (echo.Context, error)
@@ -90,6 +91,11 @@ func (u *customerUseCase) Login(pctx context.Context, req *customer.LoginReq) (*
 			},
 		},
 	}, nil
+}
+
+func (u *customerUseCase) Logout(pctx context.Context, credentialId string) (int64, error) {
+
+	return u.customerRepo.DeleteCustomerCredential(pctx, credentialId)
 }
 
 func (u *customerUseCase) RefreshToken(pctx context.Context, req *customer.CustomerRefreshTokenReq) (*customer.CustomerProfileRes, error) {

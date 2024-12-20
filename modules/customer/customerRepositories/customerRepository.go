@@ -22,6 +22,7 @@ type (
 		InsertCustomer(pctx context.Context, req *customer.Customer) (primitive.ObjectID, error)
 		FindCustomerRefreshToken(pctx context.Context, customerId string) (*customer.Customer, error)
 		InsertCustomerCredential(pctx context.Context, req *customer.Credential) (primitive.ObjectID, error)
+		DeleteCustomerCredential(pctx context.Context, credentialId string) (int64, error)
 		FindAccessToken(pctx context.Context, accessToken string) (*customer.Credential, error)
 		FindCustomerCredential(pctx context.Context, credentialId string) (*customer.Credential, error)
 		UpdateCustomerCredential(pctx context.Context, credentialId string, req *customer.UpdateRefreshToken) error
@@ -90,6 +91,22 @@ func (r *customerRepository) InsertCustomerCredential(pctx context.Context, req 
 	}
 
 	return result.InsertedID.(primitive.ObjectID), nil
+}
+
+func (r *customerRepository) DeleteCustomerCredential(pctx context.Context, credentialId string) (int64, error) {
+	ctx, cancel := context.WithTimeout(pctx, time.Second*20)
+	defer cancel()
+
+	db := r.db.Database("customer_db")
+	col := db.Collection("customer_auth")
+
+	result, err := col.DeleteOne(ctx, bson.M{"_id": utils.ConvertStringToObjectId(credentialId)})
+	if err != nil {
+		log.Printf("Error: DeleteCustomerCredential Failed %s", err.Error())
+		return 0, errors.New("error: delete customer credential failed")
+	}
+
+	return result.DeletedCount, nil
 }
 
 func (r *customerRepository) FindCustomerCredential(pctx context.Context, credentialId string) (*customer.Credential, error) {

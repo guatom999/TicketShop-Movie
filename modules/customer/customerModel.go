@@ -11,6 +11,10 @@ type (
 		Email    string `json:"email" form:"email"`
 		Password string `json:"password" form:"password"`
 	}
+
+	LogoutReq struct {
+		CredentialId string `json:"credential_id" form:"credential_id"`
+	}
 	CustomerProfileRes struct {
 		Status           string `json:"status"`
 		*CustomerProfile `json:"user"`
@@ -34,7 +38,7 @@ type (
 
 	CustomerRefreshTokenReq struct {
 		CredentialId string `json:"credential_id" form:"credential_id"`
-		CustomerId   string `json:"player_id" validate:"required,max=128"`
+		CustomerId   string `json:"customer_id" validate:"required,max=128"`
 		RefreshToken string `json:"refresh_token" form:"refresh_token" `
 	}
 
