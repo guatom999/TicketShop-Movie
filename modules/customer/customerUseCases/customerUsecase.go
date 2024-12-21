@@ -21,6 +21,7 @@ type (
 	CustomerUseCaseService interface {
 		Login(pctx context.Context, req *customer.LoginReq) (*customer.CustomerProfileRes, error)
 		Logout(pctx context.Context, credentialId string) (int64, error)
+		GetCustomerProfile(pctx context.Context, customerId string) (*customer.CustomerProfile, error)
 		Register(pctx context.Context, req *customer.RegisterReq) (primitive.ObjectID, error)
 		RefreshToken(pctx context.Context, req *customer.CustomerRefreshTokenReq) (*customer.CustomerProfileRes, error)
 		TestMiddleware(c echo.Context, accessToken string) (echo.Context, error)
@@ -98,6 +99,42 @@ func (u *customerUseCase) Logout(pctx context.Context, credentialId string) (int
 	return u.customerRepo.DeleteCustomerCredential(pctx, credentialId)
 }
 
+// func (u *customerUseCase) GetCustomerProfile(pctx context.Context, customerId string) (*customer.CustomerProfile, error) {
+
+// 	result, err := u.customerRepo.FindCustomer(pctx, customerId)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	return &customer.CustomerProfile{
+// 		Id:         result.Id.Hex(),
+// 		CustomerId: customerId,
+// 		Email:      result.Email,
+// 		ImageUrl:   result.ImageUrl,
+// 		UserName:   result.UserName,
+// 		Created_At: utils.GetStringTime(result.Created_At),
+// 		Updated_At: utils.GetStringTime(result.Updated_At),
+// 	}, nil
+// }
+
+func (u *customerUseCase) GetCustomerProfile(pctx context.Context, customerId string) (*customer.CustomerProfile, error) {
+
+	result, err := u.customerRepo.FindCustomer(pctx, customerId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &customer.CustomerProfile{
+		Id:         result.Id.Hex(),
+		CustomerId: customerId,
+		Email:      result.Email,
+		ImageUrl:   result.ImageUrl,
+		UserName:   result.UserName,
+		Created_At: utils.GetStringTime(result.Created_At),
+		Updated_At: utils.GetStringTime(result.Updated_At),
+	}, nil
+}
+
 func (u *customerUseCase) RefreshToken(pctx context.Context, req *customer.CustomerRefreshTokenReq) (*customer.CustomerProfileRes, error) {
 
 	_, err := jwtauth.ParseToken(u.cfg.Jwt.RefreshSecretKey, req.RefreshToken)
@@ -107,7 +144,7 @@ func (u *customerUseCase) RefreshToken(pctx context.Context, req *customer.Custo
 
 	fmt.Println("after trim Prefix is", strings.TrimPrefix(req.CustomerId, "customer:"))
 
-	customerProfile, err := u.customerRepo.FindCustomerRefreshToken(pctx, strings.TrimPrefix(req.CustomerId, "customer:"))
+	customerProfile, err := u.customerRepo.FindCustomer(pctx, strings.TrimPrefix(req.CustomerId, "customer:"))
 	if err != nil {
 		return nil, err
 	}

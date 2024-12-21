@@ -18,8 +18,7 @@ type (
 		Login(c echo.Context) error
 		RefreshToken(c echo.Context) error
 		Logout(c echo.Context) error
-		// FindAccessToken(c echo.Context) error
-		// RefreshToken(c echo.Context) error
+		GetCustomerProfile(c echo.Context) error
 		TestMilddeware(next echo.HandlerFunc) echo.HandlerFunc
 		TestJwtAuthorize(c echo.Context) error
 		Register(c echo.Context) error
@@ -38,6 +37,20 @@ func NewCustomerHandler(customerUseCase customerUseCases.CustomerUseCaseService,
 	}
 }
 
+func (h *customerHandler) GetCustomerProfile(c echo.Context) error {
+
+	ctx := context.Background()
+
+	customerId := c.Param("customer_id")
+
+	result, err := h.customerUseCase.GetCustomerProfile(ctx, customerId)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, result)
+
+}
 func (h *customerHandler) Login(c echo.Context) error {
 
 	ctx := context.Background()

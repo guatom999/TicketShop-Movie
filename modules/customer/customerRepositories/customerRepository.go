@@ -20,7 +20,7 @@ type (
 	CustomerRepositoryService interface {
 		FindOneCustomerWithCredential(pctx context.Context, email string) (*customer.Customer, error)
 		InsertCustomer(pctx context.Context, req *customer.Customer) (primitive.ObjectID, error)
-		FindCustomerRefreshToken(pctx context.Context, customerId string) (*customer.Customer, error)
+		FindCustomer(pctx context.Context, customerId string) (*customer.Customer, error)
 		InsertCustomerCredential(pctx context.Context, req *customer.Credential) (primitive.ObjectID, error)
 		DeleteCustomerCredential(pctx context.Context, credentialId string) (int64, error)
 		FindAccessToken(pctx context.Context, accessToken string) (*customer.Credential, error)
@@ -170,7 +170,7 @@ func (r *customerRepository) FindOneCustomerWithCredential(pctx context.Context,
 	return result, nil
 }
 
-func (r *customerRepository) FindCustomerRefreshToken(pctx context.Context, customerId string) (*customer.Customer, error) {
+func (r *customerRepository) FindCustomer(pctx context.Context, customerId string) (*customer.Customer, error) {
 
 	ctx, cancel := context.WithTimeout(pctx, time.Second*10)
 	defer cancel()
