@@ -22,6 +22,7 @@ type (
 		Login(pctx context.Context, req *customer.LoginReq) (*customer.CustomerProfileRes, error)
 		Logout(pctx context.Context, credentialId string) (int64, error)
 		GetCustomerProfile(pctx context.Context, customerId string) (*customer.CustomerProfile, error)
+		FindAccessToken(pctx context.Context, accessToken string) (*customer.Credential, error)
 		Register(pctx context.Context, req *customer.RegisterReq) (primitive.ObjectID, error)
 		RefreshToken(pctx context.Context, req *customer.CustomerRefreshTokenReq) (*customer.CustomerProfileRes, error)
 		TestMiddleware(c echo.Context, accessToken string) (echo.Context, error)
@@ -189,6 +190,10 @@ func (u *customerUseCase) RefreshToken(pctx context.Context, req *customer.Custo
 			},
 		},
 	}, nil
+}
+
+func (u *customerUseCase) FindAccessToken(pctx context.Context, accessToken string) (*customer.Credential, error) {
+	return u.customerRepo.FindAccessToken(pctx, accessToken)
 }
 
 func (u *customerUseCase) TestMiddleware(c echo.Context, accessToken string) (echo.Context, error) {

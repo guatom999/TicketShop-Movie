@@ -17,6 +17,7 @@ func (s *server) CustomerModules() {
 
 	customerRouter.GET("/testjwt", customerHandler.TestJwtAuthorize, customerHandler.TestMilddeware)
 	// customerRouter.GET("/testjwt", customerHandler.TestJwtAuthorize)
+	customerRouter.POST("/find-access-token", customerHandler.FindAccessToken)
 	customerRouter.POST("/login", customerHandler.Login)
 	customerRouter.POST("/logout", customerHandler.Logout)
 	customerRouter.POST("/refresh-token", customerHandler.RefreshToken)

@@ -22,6 +22,7 @@ type (
 		TestMilddeware(next echo.HandlerFunc) echo.HandlerFunc
 		TestJwtAuthorize(c echo.Context) error
 		Register(c echo.Context) error
+		FindAccessToken(c echo.Context) error
 	}
 
 	customerHandler struct {
@@ -109,6 +110,24 @@ func (h *customerHandler) Logout(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, fmt.Sprintf("Logout success Deleted user count %d", res))
+}
+
+func (h *customerHandler) FindAccessToken(c echo.Context) error {
+
+	ctx := context.Background()
+
+	req := new(customer.FindAccessTokenReq)
+
+	if err := c.Bind(req); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+
+	result, err := h.customerUseCase.FindAccessToken(ctx, req.AccessToken)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, result)
 }
 
 func (h *customerHandler) TestMilddeware(next echo.HandlerFunc) echo.HandlerFunc {

@@ -11,6 +11,9 @@ import (
 	"time"
 
 	"github.com/guatom999/TicketShop-Movie/config"
+	"github.com/guatom999/TicketShop-Movie/modules/middlewares/middlewareHandlers"
+	"github.com/guatom999/TicketShop-Movie/modules/middlewares/middlewareRepositories"
+	"github.com/guatom999/TicketShop-Movie/modules/middlewares/middlewareUseCases"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/omise/omise-go"
@@ -63,7 +66,18 @@ func (s *server) gracefulShutdown(pctx context.Context, close <-chan os.Signal) 
 
 }
 
+func NewMiddleware(cfg *config.Config) middlewareHandlers.MiddlewareHandlerInterface {
+	middlwareRepository := middlewareRepositories.NewMiddlewareRepository()
+	middlewareUseCase := middlewareUseCases.NewMiddlwareUseCase(middlwareRepository, cfg)
+	middlewareHandlers := middlewareHandlers.NewMiddlewareHandler(middlewareUseCase)
+
+	return middlewareHandlers
+
+}
+
 func (s *server) Start(pctx context.Context) {
+
+	NewMiddleware(s.cfg)
 
 	// Request Timeout
 	s.app.Use(middleware.TimeoutWithConfig(middleware.TimeoutConfig{

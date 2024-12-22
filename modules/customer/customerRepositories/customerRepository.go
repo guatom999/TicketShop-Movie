@@ -283,7 +283,6 @@ func (r *customerRepository) FindAccessToken(pctx context.Context, accessToken s
 	}
 
 	return result, nil
-
 }
 
 func (r *customerRepository) InsertCustomer(pctx context.Context, req *customer.Customer) (primitive.ObjectID, error) {

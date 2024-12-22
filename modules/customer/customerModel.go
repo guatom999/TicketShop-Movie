@@ -31,6 +31,10 @@ type (
 		Credential *CredentailRes `json:"credential"`
 	}
 
+	FindAccessTokenReq struct {
+		AccessToken string `json:"access_token" form:"access_token"`
+	}
+
 	CredentailRes struct {
 		AccessToken  string `json:"access_token"`
 		RefreshToken string `json:"refresh_token"`
