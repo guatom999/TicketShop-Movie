@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"mime/multipart"
+	"strings"
 	"time"
 
 	"cloud.google.com/go/storage"
@@ -22,7 +23,7 @@ import (
 
 type (
 	PaymentUseCaseService interface {
-		BuyTicket(pctx context.Context, cfg *config.Config, req *payment.MovieBuyReq) (string, error)
+		BuyTicket(pctx context.Context, cfg *config.Config, req *payment.MovieBuyReq) (*payment.BuyticketRes, error)
 		CheckOutWithCreditCard(req *payment.CheckOutWithCreditCard) error
 		UploadFileTest(file multipart.File, object string) error
 	}
@@ -95,13 +96,15 @@ func BuyTicketConsumer(pctx context.Context, topic string, resCh chan *payment.P
 
 }
 
-func (u *paymentUseCase) BuyTicket(pctx context.Context, cfg *config.Config, req *payment.MovieBuyReq) (string, error) {
+func (u *paymentUseCase) BuyTicket(pctx context.Context, cfg *config.Config, req *payment.MovieBuyReq) (*payment.BuyticketRes, error) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 	defer cancel()
 
+	req.CustomerId = strings.TrimPrefix(req.CustomerId, "customer:")
+
 	if err := u.CheckOutWithCreditCard(&payment.CheckOutWithCreditCard{Token: req.Token, Price: req.Price}); err != nil {
-		return "", err
+		return nil, err
 	}
 
 	if err := u.paymentRepo.ReserveSeat(pctx, cfg, &payment.ReserveSeatReq{
@@ -109,7 +112,7 @@ func (u *paymentUseCase) BuyTicket(pctx context.Context, cfg *config.Config, req
 		MovieId:   req.MovieId,
 		SeatNo:    req.SeatNo,
 	}); err != nil {
-		return "", err
+		return nil, err
 	}
 
 	var png []byte
@@ -118,7 +121,7 @@ func (u *paymentUseCase) BuyTicket(pctx context.Context, cfg *config.Config, req
 	png, err := qrcode.Encode(reqQrCode, qrcode.Medium, 256)
 	if err != nil {
 		fmt.Println("Error: Failed to create qrcode file:", err.Error())
-		return "", errors.New("error:failed to create qrcode file")
+		return nil, errors.New("error:failed to create qrcode file")
 	}
 
 	destination := fmt.Sprintf(u.uploadPath + utils.RandFileName())
@@ -126,25 +129,31 @@ func (u *paymentUseCase) BuyTicket(pctx context.Context, cfg *config.Config, req
 	fileUrl, err := gcpfile.UploadFile(u.cfg, u.cl, ctx, destination, png)
 	if err != nil {
 		fmt.Println("Error: Upload file failed:", err.Error())
-		return "", errors.New("error:failed to upload file")
+		return nil, errors.New("error:failed to upload file")
 	}
 
+	orderNumber := utils.RandomString()
+
 	if err := u.paymentRepo.AddTicketToCustomer(pctx, cfg, &payment.AddCustomerTicket{
-		CustomerId: req.CustomerId,
-		Date:       req.Date,
-		MovieName:  req.MovieName,
-		MovieId:    req.MovieId,
-		TicketUrl:  fileUrl,
-		SeatNo:     req.SeatNo,
-		Quantity:   req.Quantity,
+		CustomerId:  req.CustomerId,
+		OrderNumber: orderNumber,
+		Date:        req.Date,
+		MovieName:   req.MovieName,
+		MovieId:     req.MovieId,
+		TicketUrl:   fileUrl,
+		SeatNo:      req.SeatNo,
+		Quantity:    req.Quantity,
 	}); err != nil {
 		fmt.Printf("Error: Failed to add ticket %s", err.Error())
-		return "", errors.New("error:failed to add ticket")
+		return nil, errors.New("error:failed to add ticket")
 	}
 
 	fmt.Println("fileUs", fileUrl)
 
-	return fileUrl, nil
+	return &payment.BuyticketRes{
+		TransactionId: orderNumber,
+		Url:           fileUrl,
+	}, nil
 }
 
 type UploadResponse struct {

@@ -25,17 +25,19 @@ type (
 	}
 
 	AddCustomerTicket struct {
-		CustomerId string   `json:"customer_id"`
-		Date       string   `json:"date"`
-		MovieName  string   `json:"movie_name"`
-		MovieId    string   `json:"movie_id"`
-		TicketUrl  string   `json:"ticket_url"`
-		SeatNo     []string `json:"seat_no"`
-		Quantity   int64    `json:"quantity"`
+		CustomerId  string   `json:"customer_id"`
+		OrderNumber string   `json:"order_number"`
+		Date        string   `json:"date"`
+		MovieName   string   `json:"movie_name"`
+		MovieId     string   `json:"movie_id"`
+		TicketUrl   string   `json:"ticket_url"`
+		SeatNo      []string `json:"seat_no"`
+		Quantity    int64    `json:"quantity"`
 	}
 
 	BuyticketRes struct {
-		Url string `json:"url"`
+		TransactionId string `json:"transaction_id"`
+		Url           string `json:"url"`
 	}
 
 	PaymentReserveRes struct {

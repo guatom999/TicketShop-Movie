@@ -4,9 +4,12 @@ import (
 	"github.com/guatom999/TicketShop-Movie/modules/customer/customerHandlers"
 	"github.com/guatom999/TicketShop-Movie/modules/customer/customerRepositories"
 	"github.com/guatom999/TicketShop-Movie/modules/customer/customerUseCases"
+	"github.com/guatom999/TicketShop-Movie/modules/middlewares/middlewareHandlers"
 )
 
-func (s *server) CustomerModules() {
+func (s *server) CustomerModules(
+	authMiddleware middlewareHandlers.MiddlewareHandlerInterface,
+) {
 	customerRepo := customerRepositories.NewCustomerRepository(s.db, s.cfg)
 	customerUseCase := customerUseCases.NewCustomerUseCase(customerRepo, s.cfg)
 	customerHandler := customerHandlers.NewCustomerHandler(customerUseCase, s.cfg)
@@ -15,7 +18,8 @@ func (s *server) CustomerModules() {
 
 	// customerRouter.GET("/test-token" , )
 
-	customerRouter.GET("/testjwt", customerHandler.TestJwtAuthorize, customerHandler.TestMilddeware)
+	customerRouter.GET("/testjwt", customerHandler.TestJwtAuthorize, authMiddleware.JwtAuthorize)
+	// customerRouter.GET("/testjwt", customerHandler.TestJwtAuthorize, m.JwtAuthorize)
 	// customerRouter.GET("/testjwt", customerHandler.TestJwtAuthorize)
 	customerRouter.POST("/find-access-token", customerHandler.FindAccessToken)
 	customerRouter.POST("/login", customerHandler.Login)

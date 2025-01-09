@@ -12,6 +12,7 @@ type (
 		CustomerId   string             `json:"customer_id" bson:"customer_id"`
 		MovieId      string             `json:"movie_id" bson:"movie_id"`
 		MovieName    string             `json:"movie_name" bson:"movie_name"`
+		OrderNumber  string             `json:"order_number" bson:"order_number"`
 		Ticket_Image string             `json:"ticket_image" bson:"ticket_image"`
 		Created_At   time.Time          `json:"created_at" bson:"created_at"`
 		Price        int64              `json:"price" bson:"price"`

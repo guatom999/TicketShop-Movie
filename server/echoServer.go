@@ -32,8 +32,18 @@ type (
 		cfg   *config.Config
 		omise *omise.Client
 		redis *redis.Client
+		// middleware middlewareHandlers.MiddlewareHandlerInterface
 	}
 )
+
+func NewMiddleware(cfg *config.Config) middlewareHandlers.MiddlewareHandlerInterface {
+	middlwareRepository := middlewareRepositories.NewMiddlewareRepository()
+	middlewareUseCase := middlewareUseCases.NewMiddlwareUseCase(middlwareRepository, cfg)
+	middlewareHandlers := middlewareHandlers.NewMiddlewareHandler(middlewareUseCase)
+
+	return middlewareHandlers
+
+}
 
 func NewEchoServer(
 	db *mongo.Client,
@@ -66,18 +76,12 @@ func (s *server) gracefulShutdown(pctx context.Context, close <-chan os.Signal) 
 
 }
 
-func NewMiddleware(cfg *config.Config) middlewareHandlers.MiddlewareHandlerInterface {
-	middlwareRepository := middlewareRepositories.NewMiddlewareRepository()
-	middlewareUseCase := middlewareUseCases.NewMiddlwareUseCase(middlwareRepository, cfg)
-	middlewareHandlers := middlewareHandlers.NewMiddlewareHandler(middlewareUseCase)
-
-	return middlewareHandlers
-
-}
-
 func (s *server) Start(pctx context.Context) {
+	authMiddleware := NewMiddleware(s.cfg)
 
-	NewMiddleware(s.cfg)
+	// s = &server{
+	// 	middleware: authMiddleware,
+	// }
 
 	// Request Timeout
 	s.app.Use(middleware.TimeoutWithConfig(middleware.TimeoutConfig{
@@ -114,7 +118,7 @@ func (s *server) Start(pctx context.Context) {
 	case "payment":
 		s.PaymentModule()
 	case "customer":
-		s.CustomerModules()
+		s.CustomerModules(authMiddleware)
 	}
 
 	if err := s.app.Start(fmt.Sprintf(":%d", s.cfg.App.Port)); err != nil && err != http.ErrServerClosed {

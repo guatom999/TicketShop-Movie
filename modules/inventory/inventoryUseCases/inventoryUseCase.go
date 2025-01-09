@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/guatom999/TicketShop-Movie/modules/inventory"
 	"github.com/guatom999/TicketShop-Movie/modules/inventory/inventoryRepositories"
@@ -30,7 +31,7 @@ func NewInventoryUseCase(inventoryRepo inventoryRepositories.InventoryRepository
 
 func (u *inventoryUseCase) FindCustomerTicket(pctx context.Context, customerId string) ([]*inventory.CustomerTikcetRes, error) {
 
-	results, err := u.inventoryRepo.FindCustomerTicket(pctx, customerId)
+	results, err := u.inventoryRepo.FindCustomerTicket(pctx, strings.TrimPrefix(customerId, "customer:"))
 	if err != nil {
 		log.Printf("Error: get movie show time failed %s", err.Error())
 		return nil, err
@@ -65,9 +66,10 @@ func (u *inventoryUseCase) AddCustomerTicket(pctx context.Context, req *inventor
 
 	insertId, err := u.inventoryRepo.AddCustomerTicket(pctx, &inventory.CustomerTicket{
 		CustomerId:   req.CustomerId,
-		MovieId:      req.MovieId,
 		Ticket_Image: req.TicketUrl,
+		MovieId:      req.MovieId,
 		MovieName:    req.MovieName,
+		OrderNumber:  req.OrderNumber,
 		Created_At:   utils.GetLocaltime(),
 		Price:        req.Quantity * 150,
 		Seat:         req.SeatNo,
