@@ -140,6 +140,7 @@ func (u *paymentUseCase) BuyTicket(pctx context.Context, cfg *config.Config, req
 		Date:        req.Date,
 		MovieName:   req.MovieName,
 		MovieId:     req.MovieId,
+		PosterImage: req.PosterImage,
 		TicketUrl:   fileUrl,
 		SeatNo:      req.SeatNo,
 		Quantity:    req.Quantity,

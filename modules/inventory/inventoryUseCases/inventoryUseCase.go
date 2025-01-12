@@ -15,7 +15,7 @@ import (
 
 type (
 	InventoryUseCaseService interface {
-		FindCustomerTicket(pctx context.Context, customerId string) ([]*inventory.CustomerTikcetRes, error)
+		GetCustomerTicket(pctx context.Context, customerId string) ([]*inventory.CustomerTikcetRes, error)
 		FindLastCustomerTicket(pctx context.Context, customerId string) (*inventory.CustomerTikcetRes, error)
 		AddCustomerTicket(pctx context.Context, req *inventory.AddCustomerTicketReq)
 	}
@@ -29,13 +29,15 @@ func NewInventoryUseCase(inventoryRepo inventoryRepositories.InventoryRepository
 	return &inventoryUseCase{inventoryRepo: inventoryRepo}
 }
 
-func (u *inventoryUseCase) FindCustomerTicket(pctx context.Context, customerId string) ([]*inventory.CustomerTikcetRes, error) {
+func (u *inventoryUseCase) GetCustomerTicket(pctx context.Context, customerId string) ([]*inventory.CustomerTikcetRes, error) {
 
-	results, err := u.inventoryRepo.FindCustomerTicket(pctx, strings.TrimPrefix(customerId, "customer:"))
+	results, err := u.inventoryRepo.GetCustomerTicket(pctx, strings.TrimPrefix(customerId, "customer:"))
 	if err != nil {
 		log.Printf("Error: get movie show time failed %s", err.Error())
 		return nil, err
 	}
+
+	// _ = u.inventoryRepo.GetMovieDetails(pctx, results[0].MovieId)
 
 	return results, nil
 
@@ -69,6 +71,7 @@ func (u *inventoryUseCase) AddCustomerTicket(pctx context.Context, req *inventor
 		Ticket_Image: req.TicketUrl,
 		MovieId:      req.MovieId,
 		MovieName:    req.MovieName,
+		PosterUrl:    req.PosterImage,
 		OrderNumber:  req.OrderNumber,
 		Created_At:   utils.GetLocaltime(),
 		Price:        req.Quantity * 150,

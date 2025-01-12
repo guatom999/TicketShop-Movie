@@ -10,7 +10,7 @@ import (
 
 type (
 	InventoryHandlerService interface {
-		FindCustomerTicket(c echo.Context) error
+		GetCustomerTicket(c echo.Context) error
 		FindLastCustomerTicket(c echo.Context) error
 	}
 
@@ -23,18 +23,24 @@ func NewInventoryHandler(inventoryUseCase inventoryUseCases.InventoryUseCaseServ
 	return &inventoryHandler{inventoryUseCase: inventoryUseCase}
 }
 
-func (h *inventoryHandler) FindCustomerTicket(c echo.Context) error {
+func (h *inventoryHandler) GetCustomerTicket(c echo.Context) error {
 
 	ctx := context.Background()
 
 	customerId := c.Param("customerid")
 
-	results, err := h.inventoryUseCase.FindCustomerTicket(ctx, customerId)
+	results, err := h.inventoryUseCase.GetCustomerTicket(ctx, customerId)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
 
 	return c.JSON(http.StatusOK, results)
+}
+
+func (h *inventoryHandler) GetCustomerTicketDetail(c echo.Context) error {
+
+	return nil
+
 }
 
 func (h *inventoryHandler) FindLastCustomerTicket(c echo.Context) error {

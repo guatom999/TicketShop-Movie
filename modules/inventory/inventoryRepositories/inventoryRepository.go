@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/guatom999/TicketShop-Movie/modules/inventory"
+	"github.com/guatom999/TicketShop-Movie/pkg/rest"
 	"github.com/guatom999/TicketShop-Movie/utils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -17,7 +18,7 @@ import (
 
 type (
 	InventoryRepositoryService interface {
-		FindCustomerTicket(pctx context.Context, customerID string) ([]*inventory.CustomerTikcetRes, error)
+		GetCustomerTicket(pctx context.Context, customerID string) ([]*inventory.CustomerTikcetRes, error)
 		// FindLastCustomerTicket(pctx context.Context, customerId string, opts []*options.FindOneOptions) (*inventory.CustomerTikcetRes, error)
 		// FindLastCustomerTicket(pctx context.Context, customerId string, opts any) (*inventory.CustomerTikcetRes, error)
 		FindLastCustomerTicket(pctx context.Context, customerId string, opts []*options.FindOneOptions) (*inventory.CustomerTikcetRes, error)
@@ -37,7 +38,42 @@ func NewInventoryRepository(db *mongo.Client) InventoryRepositoryService {
 // 	db := r.db.Database("inventory_db")
 // }
 
-func (r *inventoryRepository) FindCustomerTicket(pctx context.Context, customerID string) ([]*inventory.CustomerTikcetRes, error) {
+// func (r *inventoryRepository) FindOneCustomerTicket(pctx context.Context, orderId)
+
+func (r *inventoryRepository) FindOneTicketDetail(pctx context.Context, ticketId string) (*inventory.CustomerTikcetRes, error) {
+
+	ctx, cancel := context.WithTimeout(pctx, time.Second*10)
+	defer cancel()
+
+	db := r.db.Database("inventory_db")
+	col := db.Collection("ticket_inventory")
+
+	result := new(inventory.CustomerTicket)
+
+	if err := col.FindOne(ctx, bson.M{"_id": utils.ConvertStringToObjectId(ticketId)}).Decode(result); err != nil {
+		log.Printf("Error: find one ticket failed :%s", err.Error())
+		return nil, err
+	}
+
+	return &inventory.CustomerTikcetRes{}, nil
+}
+
+func (r *inventoryRepository) findMovieDetail(movieId string) error {
+
+	fmt.Println("movieId is ", movieId)
+
+	result, err := rest.ReqWithParams("http://localhost:8090/movie/getmovie/", movieId)
+	if err != nil {
+		log.Printf("Error: find one movie failed :%s", err.Error())
+		return err
+	}
+
+	fmt.Println("result is ", result)
+
+	return nil
+}
+
+func (r *inventoryRepository) GetCustomerTicket(pctx context.Context, customerID string) ([]*inventory.CustomerTikcetRes, error) {
 
 	ctx, cancel := context.WithTimeout(pctx, time.Second*30)
 	defer cancel()
@@ -61,8 +97,11 @@ func (r *inventoryRepository) FindCustomerTicket(pctx context.Context, customerI
 		}
 
 		results = append(results, &inventory.CustomerTikcetRes{
+			TicketId:     result.Id.Hex(),
+			OrderNumber:  result.OrderNumber,
 			MovieId:      result.MovieId,
 			MovieName:    result.MovieName,
+			MovieImage:   result.PosterUrl,
 			Ticket_Image: result.Ticket_Image,
 			Created_At:   utils.GetStringTime(result.Created_At),
 			Price:        result.Price,
