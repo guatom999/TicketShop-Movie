@@ -103,9 +103,13 @@ func (u *paymentUseCase) BuyTicket(pctx context.Context, cfg *config.Config, req
 
 	req.CustomerId = strings.TrimPrefix(req.CustomerId, "customer:")
 
+	fmt.Println("MovieDate is ::::::::::::::::>", req.MovieDate, "movie showtime is ::::::::::::::>", req.MovieShowTime)
+
 	if err := u.CheckOutWithCreditCard(&payment.CheckOutWithCreditCard{Token: req.Token, Price: req.Price}); err != nil {
 		return nil, err
 	}
+
+	req.Price = req.Price / 100
 
 	if err := u.paymentRepo.ReserveSeat(pctx, cfg, &payment.ReserveSeatReq{
 		MovieName: req.MovieName,
@@ -135,15 +139,18 @@ func (u *paymentUseCase) BuyTicket(pctx context.Context, cfg *config.Config, req
 	orderNumber := utils.RandomString()
 
 	if err := u.paymentRepo.AddTicketToCustomer(pctx, cfg, &payment.AddCustomerTicket{
-		CustomerId:  req.CustomerId,
-		OrderNumber: orderNumber,
-		Date:        req.Date,
-		MovieName:   req.MovieName,
-		MovieId:     req.MovieId,
-		PosterImage: req.PosterImage,
-		TicketUrl:   fileUrl,
-		SeatNo:      req.SeatNo,
-		Quantity:    req.Quantity,
+		CustomerId:    req.CustomerId,
+		OrderNumber:   orderNumber,
+		Date:          req.Date,
+		MovieName:     req.MovieName,
+		MovieId:       req.MovieId,
+		MovieDate:     req.MovieDate,
+		MovieShowTime: req.MovieShowTime,
+		PosterImage:   req.PosterImage,
+		TicketUrl:     fileUrl,
+		SeatNo:        req.SeatNo,
+		Quantity:      req.Quantity,
+		Price:         req.Price,
 	}); err != nil {
 		fmt.Printf("Error: Failed to add ticket %s", err.Error())
 		return nil, errors.New("error:failed to add ticket")

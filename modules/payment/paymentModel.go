@@ -2,16 +2,18 @@ package payment
 
 type (
 	MovieBuyReq struct {
-		Email       string   `json:"email"`
-		CustomerId  string   `json:"customer_id"`
-		MovieName   string   `json:"movie_name"`
-		MovieId     string   `json:"movie_id"`
-		PosterImage string   `json:"poster_image"`
-		Token       string   `json:"token"`
-		SeatNo      []string `json:"seat_no"`
-		Price       int64    `json:"price"`
-		Date        string   `json:"date"`
-		Quantity    int64    `json:"quantity"`
+		Email         string   `json:"email"`
+		CustomerId    string   `json:"customer_id"`
+		MovieName     string   `json:"movie_name"`
+		MovieId       string   `json:"movie_id"`
+		MovieDate     string   `json:"movie_date"`
+		MovieShowTime string   `json:"movie_showtime"`
+		PosterImage   string   `json:"poster_image"`
+		Token         string   `json:"token"`
+		SeatNo        []string `json:"seat_no"`
+		Price         int64    `json:"price"`
+		Date          string   `json:"date"`
+		Quantity      int64    `json:"quantity"`
 	}
 
 	CheckOutWithCreditCard struct {
@@ -25,16 +27,9 @@ type (
 		SeatNo    []string `json:"seat_no"`
 	}
 
-	AddCustomerTicket struct {
-		CustomerId  string   `json:"customer_id"`
-		OrderNumber string   `json:"order_number"`
-		Date        string   `json:"date"`
-		MovieName   string   `json:"movie_name"`
-		MovieId     string   `json:"movie_id"`
-		PosterImage string   `json:"poster_image"`
-		TicketUrl   string   `json:"ticket_url"`
-		SeatNo      []string `json:"seat_no"`
-		Quantity    int64    `json:"quantity"`
+	RollBackReservedSeatReq struct {
+		MovieId string   `json:"movie_id"`
+		SeatNo  []string `json:"seat_no"`
 	}
 
 	BuyticketRes struct {

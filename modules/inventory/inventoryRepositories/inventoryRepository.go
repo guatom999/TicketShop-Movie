@@ -97,15 +97,17 @@ func (r *inventoryRepository) GetCustomerTicket(pctx context.Context, customerID
 		}
 
 		results = append(results, &inventory.CustomerTikcetRes{
-			TicketId:     result.Id.Hex(),
-			OrderNumber:  result.OrderNumber,
-			MovieId:      result.MovieId,
-			MovieName:    result.MovieName,
-			MovieImage:   result.PosterUrl,
-			Ticket_Image: result.Ticket_Image,
-			Created_At:   utils.GetStringTime(result.Created_At),
-			Price:        result.Price,
-			Seat:         result.Seat,
+			TicketId:      result.Id.Hex(),
+			OrderNumber:   result.OrderNumber,
+			MovieId:       result.MovieId,
+			MovieName:     result.MovieName,
+			MovieImage:    result.PosterUrl,
+			MovieDate:     result.MovieDate,
+			MovieShowTime: result.MovieShowTime,
+			Ticket_Image:  result.Ticket_Image,
+			Created_At:    utils.GetStringTime(result.Created_At),
+			Price:         result.Price,
+			Seat:          result.Seat,
 		})
 
 	}
@@ -140,7 +142,7 @@ func (r *inventoryRepository) FindLastCustomerTicket(pctx context.Context, custo
 		MovieName:    result.MovieName,
 		Ticket_Image: result.Ticket_Image,
 		Created_At:   utils.GetStringTime(result.Created_At),
-		Price:        result.Price,
+		Price:        result.Price / 100,
 		Seat:         result.Seat,
 	}, nil
 }
