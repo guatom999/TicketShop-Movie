@@ -226,6 +226,10 @@ func (u *customerUseCase) TestMiddleware(c echo.Context, accessToken string) (ec
 }
 func (u *customerUseCase) Register(pctx context.Context, req *customer.RegisterReq) (primitive.ObjectID, error) {
 
+	if u.customerRepo.IsUserAlreadyExist(pctx, req.UserName, req.Email) {
+		return primitive.NilObjectID, errors.New("error: user already exist")
+	}
+
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), 10)
 	if err != nil {
 		log.Printf("Error: hashedPassword failed %s", err.Error())
@@ -241,7 +245,7 @@ func (u *customerUseCase) Register(pctx context.Context, req *customer.RegisterR
 		Updated_At: utils.GetLocaltime(),
 	})
 	if err != nil {
-		return result, err
+		return primitive.NilObjectID, err
 	}
 
 	return result, nil

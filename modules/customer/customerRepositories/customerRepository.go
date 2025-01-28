@@ -30,6 +30,7 @@ type (
 		NewAccessToken(cfg *config.Config, customerPassport *customer.Claims) string
 		NewRefreshToken(cfg *config.Config, customerPassport *customer.Claims) string
 		ReloadToken(cfg *config.Config, customerPassport *customer.Claims) string
+		IsUserAlreadyExist(pctx context.Context, username, email string) bool
 	}
 
 	customerRepository struct {
@@ -322,4 +323,28 @@ func (r *customerRepository) ForgotPassword(pctx context.Context, email string) 
 	}
 
 	return nil
+}
+
+func (r *customerRepository) IsUserAlreadyExist(pctx context.Context, username, email string) bool {
+
+	ctx, cancel := context.WithTimeout(pctx, time.Second*20)
+	defer cancel()
+
+	db := r.db.Database("customer_db")
+	col := db.Collection("customer")
+
+	customer := new(customer.Customer)
+
+	if err := col.FindOne(ctx, bson.M{"$or": []bson.M{
+		{"email": email},
+		{"username": username},
+	},
+	},
+	).Decode(customer); err != nil {
+		log.Printf("Error: This use is not exits: %v", err.Error())
+		return false
+	}
+
+	return true
+
 }
