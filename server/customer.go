@@ -27,6 +27,6 @@ func (s *server) CustomerModules(
 	customerRouter.POST("/refresh-token", customerHandler.RefreshToken)
 	customerRouter.POST("/register", customerHandler.Register)
 
-	customerRouter.POST("/testsendemail", customerHandler.TestSendEmail)
+	customerRouter.POST("/forgotpassword", customerHandler.ForgotPassword)
 
 }

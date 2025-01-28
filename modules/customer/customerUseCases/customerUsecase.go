@@ -27,7 +27,7 @@ type (
 		Register(pctx context.Context, req *customer.RegisterReq) (primitive.ObjectID, error)
 		RefreshToken(pctx context.Context, req *customer.CustomerRefreshTokenReq) (*customer.CustomerProfileRes, error)
 		TestMiddleware(c echo.Context, accessToken string) (echo.Context, error)
-		TestSendEmail(pctx context.Context, sendTo string) error
+		ForgotPassword(pctx context.Context, sendTo string) error
 	}
 
 	customerUseCase struct {
@@ -251,12 +251,11 @@ func (u *customerUseCase) Register(pctx context.Context, req *customer.RegisterR
 	return result, nil
 }
 
-func (u *customerUseCase) TestSendEmail(pctx context.Context, sendTo string) error {
+func (u *customerUseCase) ForgotPassword(pctx context.Context, sendTo string) error {
 
-	// if err := utils.SendEmail(u.cfg, "bebeoblybe@gmail.com", "test", "justTest"); err != nil {
-	// 	log.Printf("Errors TestSendEmail is %s", err.Error())
-	// 	return err
-	// }
+	if !u.customerRepo.IsUserAlreadyExist(pctx, "", sendTo) {
+		return errors.New("error: user not found")
+	}
 
 	toSendMessage := gomail.NewMessage()
 	toSendMessage.SetHeader("To", sendTo)
