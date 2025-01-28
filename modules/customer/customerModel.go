@@ -46,6 +46,10 @@ type (
 		RefreshToken string `json:"refresh_token" form:"refresh_token" `
 	}
 
+	SendForgotPasswordReq struct {
+		Email string `json:"email" validate:"required"`
+	}
+
 	// TokenRes struct {
 	// 	AccessToken  string `json:"access_token"`
 	// 	RefreshToken string `json:"refresh_token"`

@@ -9,13 +9,14 @@ import (
 
 type (
 	Config struct {
-		App   App
-		Db    Db
-		Jwt   Jwt
-		Kafka Kafka
-		Omise Omise
-		Gcp   Gcp
-		Redis Redis
+		App    App
+		Db     Db
+		Jwt    Jwt
+		Kafka  Kafka
+		Omise  Omise
+		Gcp    Gcp
+		Redis  Redis
+		Mailer Mailer
 	}
 
 	App struct {
@@ -52,6 +53,13 @@ type (
 
 	Redis struct {
 		RedisUrl string
+	}
+
+	Mailer struct {
+		MailerHost     string
+		MailerPort     int
+		MailerUserName string
+		MailerPassword string
 	}
 )
 
@@ -99,6 +107,12 @@ func GetConfig(path string) Config {
 		},
 		Redis: Redis{
 			RedisUrl: viper.GetString("REDIS_URL"),
+		},
+		Mailer: Mailer{
+			MailerHost:     viper.GetString("MAILER_HOST"),
+			MailerPort:     viper.GetInt("MAILER_PORT"),
+			MailerUserName: viper.GetString("MAILER_USERNAME"),
+			MailerPassword: viper.GetString("MAILER_PASSWORD"),
 		},
 	}
 }

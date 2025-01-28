@@ -15,6 +15,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/crypto/bcrypt"
+	"gopkg.in/gomail.v2"
 )
 
 type (
@@ -26,18 +27,21 @@ type (
 		Register(pctx context.Context, req *customer.RegisterReq) (primitive.ObjectID, error)
 		RefreshToken(pctx context.Context, req *customer.CustomerRefreshTokenReq) (*customer.CustomerProfileRes, error)
 		TestMiddleware(c echo.Context, accessToken string) (echo.Context, error)
+		TestSendEmail(pctx context.Context, sendTo string) error
 	}
 
 	customerUseCase struct {
 		customerRepo customerRepositories.CustomerRepositoryService
 		cfg          *config.Config
+		mailer       *gomail.Dialer
 	}
 )
 
-func NewCustomerUseCase(customerRepo customerRepositories.CustomerRepositoryService, cfg *config.Config) CustomerUseCaseService {
+func NewCustomerUseCase(customerRepo customerRepositories.CustomerRepositoryService, cfg *config.Config, mailer *gomail.Dialer) CustomerUseCaseService {
 	return &customerUseCase{
 		customerRepo: customerRepo,
 		cfg:          cfg,
+		mailer:       mailer,
 	}
 }
 
@@ -241,4 +245,24 @@ func (u *customerUseCase) Register(pctx context.Context, req *customer.RegisterR
 	}
 
 	return result, nil
+}
+
+func (u *customerUseCase) TestSendEmail(pctx context.Context, sendTo string) error {
+
+	// if err := utils.SendEmail(u.cfg, "bebeoblybe@gmail.com", "test", "justTest"); err != nil {
+	// 	log.Printf("Errors TestSendEmail is %s", err.Error())
+	// 	return err
+	// }
+
+	toSendMessage := gomail.NewMessage()
+	toSendMessage.SetHeader("To", sendTo)
+	toSendMessage.SetHeader("Subject", "Why you forgot password")
+	toSendMessage.SetBody("text/html", "You password is")
+
+	if err := utils.SecondSendEmail(u.cfg, toSendMessage); err != nil {
+		log.Printf("Errors TestSendEmail is %s", err.Error())
+		return err
+	}
+
+	return nil
 }

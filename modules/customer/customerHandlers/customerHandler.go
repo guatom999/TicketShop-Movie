@@ -23,6 +23,7 @@ type (
 		TestJwtAuthorize(c echo.Context) error
 		Register(c echo.Context) error
 		FindAccessToken(c echo.Context) error
+		TestSendEmail(c echo.Context) error
 	}
 
 	customerHandler struct {
@@ -160,4 +161,21 @@ func (h *customerHandler) Register(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusCreated, result)
+}
+
+func (h *customerHandler) TestSendEmail(c echo.Context) error {
+
+	ctx := context.Background()
+
+	req := new(customer.SendForgotPasswordReq)
+
+	if err := c.Bind(req); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+
+	if err := h.customerUseCase.TestSendEmail(ctx, req.Email); err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, "send email success")
 }

@@ -36,7 +36,7 @@ func ConvertStringDateToTime(stringDate string) time.Time {
 func SetSpecificTime(year int, month time.Month, day, hour, minute, second int) time.Time {
 
 	specificTime := time.Date(year, month, day, hour, minute, second, 0, time.UTC)
-	log.Println("Specific Time is:", specificTime)
+	// log.Println("Specific Time is:", specificTime)
 
 	return specificTime
 

@@ -19,6 +19,7 @@ import (
 	"github.com/omise/omise-go"
 	"github.com/redis/go-redis/v9"
 	"go.mongodb.org/mongo-driver/mongo"
+	"gopkg.in/gomail.v2"
 )
 
 type (
@@ -27,11 +28,12 @@ type (
 	}
 
 	server struct {
-		app   *echo.Echo
-		db    *mongo.Client
-		cfg   *config.Config
-		omise *omise.Client
-		redis *redis.Client
+		app    *echo.Echo
+		db     *mongo.Client
+		cfg    *config.Config
+		omise  *omise.Client
+		redis  *redis.Client
+		mailer *gomail.Dialer
 		// middleware middlewareHandlers.MiddlewareHandlerInterface
 	}
 )
@@ -50,13 +52,15 @@ func NewEchoServer(
 	cfg *config.Config,
 	omise *omise.Client,
 	redis *redis.Client,
+	mailer *gomail.Dialer,
 ) Server {
 	return &server{
-		app:   echo.New(),
-		db:    db,
-		cfg:   cfg,
-		omise: omise,
-		redis: redis,
+		app:    echo.New(),
+		db:     db,
+		cfg:    cfg,
+		omise:  omise,
+		redis:  redis,
+		mailer: mailer,
 	}
 }
 

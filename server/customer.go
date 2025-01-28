@@ -11,7 +11,7 @@ func (s *server) CustomerModules(
 	authMiddleware middlewareHandlers.MiddlewareHandlerInterface,
 ) {
 	customerRepo := customerRepositories.NewCustomerRepository(s.db, s.cfg)
-	customerUseCase := customerUseCases.NewCustomerUseCase(customerRepo, s.cfg)
+	customerUseCase := customerUseCases.NewCustomerUseCase(customerRepo, s.cfg, s.mailer)
 	customerHandler := customerHandlers.NewCustomerHandler(customerUseCase, s.cfg)
 
 	customerRouter := s.app.Group("/user")
@@ -26,5 +26,7 @@ func (s *server) CustomerModules(
 	customerRouter.POST("/logout", customerHandler.Logout)
 	customerRouter.POST("/refresh-token", customerHandler.RefreshToken)
 	customerRouter.POST("/register", customerHandler.Register)
+
+	customerRouter.POST("/testsendemail", customerHandler.TestSendEmail)
 
 }

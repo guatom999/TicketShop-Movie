@@ -26,6 +26,7 @@ type (
 		FindAccessToken(pctx context.Context, accessToken string) (*customer.Credential, error)
 		FindCustomerCredential(pctx context.Context, credentialId string) (*customer.Credential, error)
 		UpdateCustomerCredential(pctx context.Context, credentialId string, req *customer.UpdateRefreshToken) error
+		ForgotPassword(pctx context.Context, email string) error
 		NewAccessToken(cfg *config.Config, customerPassport *customer.Claims) string
 		NewRefreshToken(cfg *config.Config, customerPassport *customer.Claims) string
 		ReloadToken(cfg *config.Config, customerPassport *customer.Claims) string
@@ -300,4 +301,25 @@ func (r *customerRepository) InsertCustomer(pctx context.Context, req *customer.
 	}
 
 	return customerId.InsertedID.(primitive.ObjectID), nil
+}
+
+func (r *customerRepository) ForgotPassword(pctx context.Context, email string) error {
+
+	ctx, cancel := context.WithTimeout(pctx, time.Second*20)
+	defer cancel()
+
+	db := r.db.Database("customer_db")
+	col := db.Collection("customer")
+
+	_, err := col.UpdateOne(ctx, bson.M{"email": email}, bson.M{"$set": bson.M{
+		"password":   "123456",
+		"updated_at": utils.GetLocaltime(),
+	}})
+
+	if err != nil {
+		log.Printf("Error: ForgotPassword Failed %s", err.Error())
+		return errors.New("error: forgot password failed")
+	}
+
+	return nil
 }
