@@ -75,9 +75,7 @@ func (r *moviesrepository) InsertMovie(pctx context.Context, req []*movie.Movie,
 		return errors.New("error: insert one movie failed")
 	}
 
-	fmt.Println("data after insert is", result)
-
-	dayLength := req[len(req)-1].OutOfTheatersAt.Day() - req[0].ReleaseAt.Day() + 1
+	dayLength := req[len(req)-1].OutOfTheatersAt.YearDay() - req[0].ReleaseAt.YearDay() + 1
 
 	lastInsertId := result.InsertedIDs[0].(primitive.ObjectID)
 
@@ -442,3 +440,37 @@ func (r *moviesrepository) ReserveSeat(pctx context.Context, req *movie.ReserveD
 
 // 	return results, nil
 // }
+
+func (r *moviesrepository) InsertNews(pctx context.Context, req *movie.AddNewsReq) error {
+
+	ctx, cancel := context.WithTimeout(pctx, time.Second*20)
+	defer cancel()
+
+	db := r.db.Database("movie_db")
+	col := db.Collection("movie_news")
+
+	_, err := col.InsertOne(ctx, req)
+	if err != nil {
+		log.Printf("Error: Insert Movie News Failed:%s", err.Error())
+		return errors.New("error: insert movie news failed")
+	}
+
+	return nil
+}
+
+func (r *moviesrepository) InsertPromotions(pctx context.Context, req *movie.AddPromotionsReq) error {
+
+	ctx, cancel := context.WithTimeout(pctx, time.Second*20)
+	defer cancel()
+
+	db := r.db.Database("movie_db")
+	col := db.Collection("movie_promotions")
+
+	_, err := col.InsertOne(ctx, req)
+	if err != nil {
+		log.Printf("Error: Insert Movie News Failed:%s", err.Error())
+		return errors.New("error: insert movie news failed")
+	}
+
+	return nil
+}

@@ -50,6 +50,12 @@ type (
 		IsComingSoon  bool            `json:"is_coming_soon"`
 	}
 
+	AddNewsReq struct {
+	}
+
+	AddPromotionsReq struct {
+	}
+
 	ReserveDetailReq struct {
 		MovieId string   `json:"movie_id"`
 		SeatNo  []string `json:"seat_no"`
