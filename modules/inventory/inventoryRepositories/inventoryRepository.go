@@ -60,15 +60,13 @@ func (r *inventoryRepository) FindOneTicketDetail(pctx context.Context, ticketId
 
 func (r *inventoryRepository) findMovieDetail(movieId string) error {
 
-	fmt.Println("movieId is ", movieId)
-
 	result, err := rest.ReqWithParams("http://localhost:8090/movie/getmovie/", movieId)
 	if err != nil {
 		log.Printf("Error: find one movie failed :%s", err.Error())
 		return err
 	}
 
-	fmt.Println("result is ", result)
+	fmt.Println("Result:", result)
 
 	return nil
 }

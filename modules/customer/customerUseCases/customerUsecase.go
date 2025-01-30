@@ -3,7 +3,6 @@ package customerUseCases
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
 	"strings"
 
@@ -147,7 +146,7 @@ func (u *customerUseCase) RefreshToken(pctx context.Context, req *customer.Custo
 		return nil, err
 	}
 
-	fmt.Println("after trim Prefix is", strings.TrimPrefix(req.CustomerId, "customer:"))
+	// fmt.Println("after trim Prefix is", strings.TrimPrefix(req.CustomerId, "customer:"))
 
 	customerProfile, err := u.customerRepo.FindCustomer(pctx, strings.TrimPrefix(req.CustomerId, "customer:"))
 	if err != nil {
@@ -219,7 +218,6 @@ func (u *customerUseCase) TestMiddleware(c echo.Context, accessToken string) (ec
 		return nil, errors.New("errro: access token is invalid")
 	}
 
-	// fmt.Println("customer_id is", claims.Id)
 	c.Set("customer_id", claims.CustomerId)
 
 	return c, nil

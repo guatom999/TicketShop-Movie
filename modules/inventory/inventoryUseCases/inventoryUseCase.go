@@ -66,8 +66,6 @@ func (u *inventoryUseCase) FindLastCustomerTicket(pctx context.Context, customer
 
 func (u *inventoryUseCase) AddCustomerTicket(pctx context.Context, req *inventory.AddCustomerTicketReq) {
 
-	fmt.Println("MovieDate in inventory time is :::::::::::::>", req.MovieDate, "MovieShowTime in inventory time is", req.MovieShowTime)
-
 	insertId, err := u.inventoryRepo.AddCustomerTicket(pctx, &inventory.CustomerTicket{
 		CustomerId:    req.CustomerId,
 		Ticket_Image:  req.TicketUrl,
@@ -83,7 +81,7 @@ func (u *inventoryUseCase) AddCustomerTicket(pctx context.Context, req *inventor
 	})
 
 	if err != nil {
-		fmt.Println("insertId ", insertId)
+		log.Printf("Error: AddCustomerTicket failed %s", err.Error())
 	}
 
 	fmt.Println("insertID is", insertId)

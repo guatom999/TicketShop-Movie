@@ -68,7 +68,6 @@ func (u *paymentUseCase) CheckOutWithCreditCard(req *payment.CheckOutWithCreditC
 
 // func PaymentConsumer(pctx context.Context, cfg *config.Config, topic string) *kafka.Conn {
 // 	conn := queue.KafkaConn(cfg)
-// 	fmt.Println("kafka connect is success")
 
 // 	topicConfigs := make([]kafka.TopicConfig, 0)
 
@@ -103,8 +102,6 @@ func (u *paymentUseCase) BuyTicket(pctx context.Context, cfg *config.Config, req
 
 	req.CustomerId = strings.TrimPrefix(req.CustomerId, "customer:")
 
-	fmt.Println("MovieDate is ::::::::::::::::>", req.MovieDate, "movie showtime is ::::::::::::::>", req.MovieShowTime)
-
 	if err := u.CheckOutWithCreditCard(&payment.CheckOutWithCreditCard{Token: req.Token, Price: req.Price}); err != nil {
 		return nil, err
 	}
@@ -124,7 +121,7 @@ func (u *paymentUseCase) BuyTicket(pctx context.Context, cfg *config.Config, req
 
 	png, err := qrcode.Encode(reqQrCode, qrcode.Medium, 256)
 	if err != nil {
-		fmt.Println("Error: Failed to create qrcode file:", err.Error())
+		log.Printf("Error: Failed to create qrcode file: %s", err.Error())
 		return nil, errors.New("error:failed to create qrcode file")
 	}
 
@@ -132,7 +129,7 @@ func (u *paymentUseCase) BuyTicket(pctx context.Context, cfg *config.Config, req
 
 	fileUrl, err := gcpfile.UploadFile(u.cfg, u.cl, ctx, destination, png)
 	if err != nil {
-		fmt.Println("Error: Upload file failed:", err.Error())
+		log.Printf("Error: Upload file failed: %s", err.Error())
 		return nil, errors.New("error:failed to upload file")
 	}
 
@@ -175,11 +172,10 @@ func (c *paymentUseCase) UploadFileTest(file multipart.File, object string) erro
 	ctx, cancel := context.WithTimeout(ctx, time.Second*50)
 	defer cancel()
 
-	fmt.Println("TestUpload", file)
 	var png []byte
 	png, err := qrcode.Encode("https://photos.app.goo.gl/pkN35vFQhc6DRXqQ6", qrcode.Medium, 256)
 	if err != nil {
-		fmt.Println("Error: Failed to create qrcode file:", err.Error())
+		log.Printf("Error: Failed to create qrcode file:%s", err.Error())
 		return errors.New("error:failed to create qrcode file")
 	}
 

@@ -2,7 +2,6 @@ package migrate
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/guatom999/TicketShop-Movie/config"
@@ -24,7 +23,7 @@ func TicketMigrate(pctx context.Context, cfg *config.Config) {
 		Keys: bson.D{{"_id", 1}},
 	})
 	if err != nil {
-		fmt.Println("Error : CreateIndex Failed", err)
+		log.Printf("Error : CreateIndex Failed :%s", err.Error())
 		panic(err)
 	}
 

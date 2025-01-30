@@ -3,7 +3,6 @@ package customerRepositories
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
 	"time"
 
@@ -166,8 +165,6 @@ func (r *customerRepository) FindOneCustomerWithCredential(pctx context.Context,
 		log.Printf("Error: FindOneCustomerWithCredential Failed %s", err.Error())
 		return nil, errors.New("error: find customer failed")
 	}
-
-	fmt.Println("result is", result)
 
 	return result, nil
 }

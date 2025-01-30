@@ -19,16 +19,14 @@ func ConvertStringDateToTime(stringDate string) time.Time {
 
 	layout := "02-01-2006"
 
-	// Parse the string into a time.Time object
 	t, err := time.Parse(layout, stringDate)
 
 	if err != nil {
-		fmt.Println("Error parsing string:", err)
+		log.Printf("Error parsing string: %s", err.Error())
 		return time.Now()
 	}
 
-	// Now you have a time.Time object representing the date
-	fmt.Println(t)
+	fmt.Println("time is", t)
 
 	return t
 }

@@ -40,7 +40,6 @@ func NewPaymentRepository(db *mongo.Client) PaymentRepositoryService {
 
 func PaymentConsumer(pctx context.Context, cfg *config.Config, topic string) *kafka.Conn {
 	conn := queue.KafkaConn(cfg, topic)
-	// fmt.Println("kafka connect is success")
 
 	topicConfigs := make([]kafka.TopicConfig, 0)
 

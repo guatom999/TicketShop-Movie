@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"fmt"
+	"log"
 	"net/http"
 	"time"
 )
@@ -32,7 +32,7 @@ func (r *middlwareRepository) AccessTokenSearch(pctx context.Context, accessToke
 	// Create a new POST request
 	req, err := http.NewRequest("POST", "http://localhost:8100/user/find-access-token", body)
 	if err != nil {
-		fmt.Println("Error creating request:", err)
+		log.Printf("Error creating request: %s", err.Error())
 		return err
 	}
 
@@ -44,7 +44,7 @@ func (r *middlwareRepository) AccessTokenSearch(pctx context.Context, accessToke
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Println("Error sending request:", err)
+		log.Printf("Error creating client: %s", err.Error())
 		return err
 	}
 	defer resp.Body.Close()

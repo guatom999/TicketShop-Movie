@@ -3,6 +3,7 @@ package migrate
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/guatom999/TicketShop-Movie/config"
 	"github.com/guatom999/TicketShop-Movie/database"
@@ -35,7 +36,7 @@ func InventoryMigrate(pctx context.Context, cfg *config.Config) {
 	}()
 
 	if _, err := col.InsertMany(pctx, documents); err != nil {
-		fmt.Println("Error: Insert Inventory failed :", err)
+		log.Printf("Error inserting: Insert Inventory failed :%s", err.Error())
 		panic(err)
 	}
 

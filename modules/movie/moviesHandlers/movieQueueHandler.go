@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 
 	"github.com/guatom999/TicketShop-Movie/config"
 	"github.com/guatom999/TicketShop-Movie/modules/movie"
@@ -63,7 +64,7 @@ func (h *moviesQueueHandler) ReserveSeat() {
 
 		message, err := reader.ReadMessage(ctx)
 		if err != nil {
-			fmt.Println("Error reading message:", err)
+			log.Printf("Error reading message: %s", err.Error())
 			break
 		}
 

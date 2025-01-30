@@ -19,16 +19,15 @@ func Request(url string) (string, error) {
 
 	resp, err := client.Get(url)
 	if err != nil {
-		fmt.Println("Error sending GET request:", err)
+		log.Printf("Error sending GET request: %s", err.Error)
 		return "", err
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 
-	fmt.Println("body is", body)
 	if err != nil {
-		fmt.Println("Error reading response body:", err)
+		log.Printf("Error reading response body: %s", err.Error())
 		return "", err
 	}
 
@@ -45,16 +44,15 @@ func ReqWithParams(url, params string) (any, error) {
 
 	resp, err := client.Get(url)
 	if err != nil {
-		fmt.Println("Error sending GET request:", err)
+		log.Printf("Error sending GET request: %s", err.Error())
 		return "", err
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 
-	fmt.Println("body is", body)
 	if err != nil {
-		fmt.Println("Error reading response body:", err)
+		log.Printf("Error reading response body: %s", err.Error())
 		return "", err
 	}
 
@@ -72,7 +70,7 @@ func ReqWithBody(url string, body map[string]string) error {
 	// Create a new request with method GET and the body
 	req, err := http.NewRequest("GET", url, bytes.NewBuffer([]byte(bodyData)))
 	if err != nil {
-		fmt.Println("Error creating request:", err)
+		log.Printf("Error creating request: %s", err.Error())
 		return err
 	}
 
@@ -80,7 +78,7 @@ func ReqWithBody(url string, body map[string]string) error {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Println("Error sending request:", err)
+		log.Printf("Error sending request: %s", err.Error())
 		return err
 	}
 	defer resp.Body.Close()
@@ -88,7 +86,7 @@ func ReqWithBody(url string, body map[string]string) error {
 	// Read and print the response body
 	respBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		fmt.Println("Error reading response:", err)
+		log.Printf("Error reading response: %s", err.Error())
 		return err
 	}
 
@@ -112,7 +110,7 @@ func Post(url string, value any) error {
 	// Create a new POST request
 	req, err := http.NewRequest("POST", url, body)
 	if err != nil {
-		fmt.Println("Error creating request:", err)
+		log.Printf("Error creating request: %s", err.Error())
 		return nil
 	}
 
@@ -124,7 +122,7 @@ func Post(url string, value any) error {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Println("Error sending request:", err)
+		log.Printf("Error sending request: %s", err.Error())
 		return nil
 	}
 	defer resp.Body.Close()
@@ -132,7 +130,7 @@ func Post(url string, value any) error {
 	// Read and print the response
 	respBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		fmt.Println("Error reading response:", err)
+		log.Printf("Error reading response: %s", err.Error())
 		return nil
 	}
 

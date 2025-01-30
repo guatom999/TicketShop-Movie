@@ -3,6 +3,7 @@ package moviesUseCases
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/guatom999/TicketShop-Movie/modules/movie"
@@ -194,8 +195,7 @@ func (u *moviesUseCase) TestReq(pctx context.Context) (string, error) {
 
 	res, err := rest.Request(url)
 	if err != nil {
-
-		fmt.Println("Error: Error is ", res)
+		log.Printf("Error: Error is : %s", err.Error())
 		return "", err
 	}
 

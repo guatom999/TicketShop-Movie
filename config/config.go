@@ -76,8 +76,6 @@ func GetConfig(path string) Config {
 		panic(err)
 	}
 
-	// fmt.Println("viper get env test ", viper.GetString("DB_HOST"))
-
 	return Config{
 		App: App{
 			Name: viper.GetString("APP_NAME"),
@@ -128,8 +126,6 @@ func GetMigrateConfig(path string) Config {
 		log.Fatalf("fatal error config file: %s", err.Error())
 		panic(err)
 	}
-
-	// fmt.Println("viper get env test ", viper.GetString("DB_HOST"))
 
 	return Config{
 		App: App{

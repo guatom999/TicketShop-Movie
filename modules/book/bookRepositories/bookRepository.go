@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"time"
 
@@ -35,20 +36,20 @@ func (r *bookRepository) FindMovieIsAvaliable(title string) error {
 
 	resp, err := client.Get(fmt.Sprintf("http://localhost:8090/getmovie/%s", title))
 	if err != nil {
-		fmt.Println("Error sending GET request:", err)
+		log.Printf("Error sending GET request: %s", err.Error())
 		return err
 	}
 
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	_, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
-		fmt.Println("Error reading response body:", err)
+		log.Printf("Error reading response body: %s", err.Error())
 		return err
 	}
 
-	fmt.Println("Response status code:", resp.StatusCode)
-	fmt.Println("Response body:", string(body)) // Assuming JSON response
+	// fmt.Println("Response status code:", resp.StatusCode)
+	// fmt.Println("Response body:", string(body))
 
 	return nil
 
