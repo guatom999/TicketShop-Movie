@@ -102,10 +102,6 @@ func (u *paymentUseCase) BuyTicket(pctx context.Context, cfg *config.Config, req
 
 	req.CustomerId = strings.TrimPrefix(req.CustomerId, "customer:")
 
-	if err := u.CheckOutWithCreditCard(&payment.CheckOutWithCreditCard{Token: req.Token, Price: req.Price}); err != nil {
-		return nil, err
-	}
-
 	req.Price = req.Price / 100
 
 	if err := u.paymentRepo.ReserveSeat(pctx, cfg, &payment.ReserveSeatReq{
@@ -113,6 +109,10 @@ func (u *paymentUseCase) BuyTicket(pctx context.Context, cfg *config.Config, req
 		MovieId:   req.MovieId,
 		SeatNo:    req.SeatNo,
 	}); err != nil {
+		return nil, err
+	}
+
+	if err := u.CheckOutWithCreditCard(&payment.CheckOutWithCreditCard{Token: req.Token, Price: req.Price}); err != nil {
 		return nil, err
 	}
 
