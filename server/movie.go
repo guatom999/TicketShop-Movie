@@ -22,7 +22,6 @@ func (s *server) MovieModule() {
 	movieRouter.GET("/getmovie/:movie_id", movieHandler.FindOneMovie)
 	movieRouter.GET("/getmovieshowtime/:movieid", movieHandler.FindMovieShowTime)
 
-	//Test
 	movieRouter.POST("/reserveseat", movieHandler.ReserveSeat)
 
 	movieRouter.GET("/test", movieHandler.TestReq)
