@@ -2,10 +2,12 @@ package moviesUseCases
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"time"
 
+	"github.com/guatom999/TicketShop-Movie/config"
 	"github.com/guatom999/TicketShop-Movie/modules/movie"
 	"github.com/guatom999/TicketShop-Movie/modules/movie/moviesRepositories"
 	"github.com/guatom999/TicketShop-Movie/pkg/rest"
@@ -25,12 +27,13 @@ type (
 	}
 
 	moviesUseCase struct {
+		cfg        *config.Config
 		moviesRepo moviesRepositories.MoviesRepositoryService
 	}
 )
 
-func NewmoviesUseCase(moviesRepo moviesRepositories.MoviesRepositoryService) MoviesUseCaseService {
-	return &moviesUseCase{moviesRepo: moviesRepo}
+func NewmoviesUseCase(cfg *config.Config, moviesRepo moviesRepositories.MoviesRepositoryService) MoviesUseCaseService {
+	return &moviesUseCase{cfg: cfg, moviesRepo: moviesRepo}
 }
 
 func (u *moviesUseCase) AddOneMovie(pctx context.Context, req []*movie.AddMovieReq) error {
@@ -182,7 +185,67 @@ func (u *moviesUseCase) FindMovieShowTime(pctx context.Context, title string) ([
 
 func (u *moviesUseCase) ReserveSeat(pctx context.Context, req *movie.ReserveDetailReq) error {
 
-	if err := u.moviesRepo.UpdateSeatStatus(pctx, req); err != nil {
+	result, err := u.moviesRepo.GetOneMovieAvaliable(pctx, req)
+	if err != nil {
+		// u.moviesRepo.RollbackSeatStatusRes(pctx, result)
+		u.moviesRepo.RollbackSeatStatusRes(pctx, u.cfg, &movie.RollBackReserveSeatRes{
+			MovieId:     req.MovieId,
+			Seat_Number: req.SeatNo,
+			Error:       err.Error(),
+		})
+		return err
+	}
+
+	for _, reserveSeatNo := range req.SeatNo {
+		for x, seatAvailable := range result.SeatAvailable {
+			if _, ok := seatAvailable[reserveSeatNo]; ok {
+				result.SeatAvailable[x][reserveSeatNo] = false
+				break
+			} else if x == (len(result.SeatAvailable) - 1) {
+
+				u.moviesRepo.RollbackSeatStatusRes(pctx, u.cfg, &movie.RollBackReserveSeatRes{
+					MovieId:     req.MovieId,
+					Seat_Number: req.SeatNo,
+					Error:       errors.New("error: no seat match").Error(),
+				})
+				return errors.New("error: no seat match")
+			}
+		}
+	}
+
+	if err := u.moviesRepo.UpdateSeatStatus(pctx, req.MovieId, result); err != nil {
+		u.moviesRepo.RollbackSeatStatusRes(pctx, u.cfg, &movie.RollBackReserveSeatRes{
+			MovieId:     req.MovieId,
+			Seat_Number: req.SeatNo,
+			Error:       err.Error(),
+		})
+		return err
+	}
+
+	return nil
+}
+
+func (u *moviesUseCase) RollbackReserveSeat(pctx context.Context, req *movie.ReserveDetailReq) error {
+
+	result, err := u.moviesRepo.GetOneMovieAvaliable(pctx, req)
+	if err != nil {
+		return err
+	}
+
+	for _, reserveSeatNo := range req.SeatNo {
+		for x, seatAvailable := range result.SeatAvailable {
+			if _, ok := seatAvailable[reserveSeatNo]; ok {
+				result.SeatAvailable[x][reserveSeatNo] = true
+				break
+			} else if x == (len(result.SeatAvailable) - 1) {
+
+				log.Println("error:no seat match")
+				return errors.New("error: no seat match")
+			}
+		}
+	}
+
+	if err := u.moviesRepo.UpdateSeatStatus(pctx, req.MovieId, result); err != nil {
 		return err
 	}
 

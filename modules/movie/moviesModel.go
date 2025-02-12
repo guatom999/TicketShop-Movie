@@ -56,6 +56,12 @@ type (
 	AddPromotionsReq struct {
 	}
 
+	RollBackReserveSeatRes struct {
+		MovieId     string   `json:"movie_id"`
+		Seat_Number []string `json:"seat_no"`
+		Error       string   `json:"error"`
+	}
+
 	ReserveDetailReq struct {
 		MovieId string   `json:"movie_id"`
 		SeatNo  []string `json:"seat_no"`
@@ -64,5 +70,6 @@ type (
 	ReserveSeatReqTest struct {
 		MovieId     string   `json:"movie_id"`
 		Seat_Number []string `json:"seat_no"`
+		Error       string   `json:"error"`
 	}
 )

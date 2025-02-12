@@ -15,6 +15,7 @@ import (
 type (
 	MoviesQueueHandlerService interface {
 		ReserveSeat()
+		RollBackSeat()
 	}
 
 	moviesQueueHandler struct {
@@ -58,6 +59,35 @@ func (h *moviesQueueHandler) ReserveSeat() {
 	data := new(movie.ReserveSeatReqTest)
 
 	reader := queue.KafkaReader("buy-ticket")
+	defer reader.Close()
+
+	for {
+
+		message, err := reader.ReadMessage(ctx)
+		if err != nil {
+			log.Printf("Error reading message: %s", err.Error())
+			break
+		}
+
+		if err := json.Unmarshal(message.Value, data); err != nil {
+			fmt.Printf("Error: Unmarshal error %s", err.Error())
+		}
+
+		h.movieUseCase.ReserveSeat(ctx, &movie.ReserveDetailReq{
+			MovieId: data.MovieId,
+			SeatNo:  data.Seat_Number,
+		})
+
+	}
+}
+
+func (h *moviesQueueHandler) RollBackSeat() {
+
+	ctx := context.Background()
+
+	data := new(movie.ReserveSeatReqTest)
+
+	reader := queue.KafkaReader("rollback-seat")
 	defer reader.Close()
 
 	for {
