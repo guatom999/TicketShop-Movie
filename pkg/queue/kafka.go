@@ -3,6 +3,7 @@ package queue
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/guatom999/TicketShop-Movie/config"
 	"github.com/segmentio/kafka-go"
@@ -15,6 +16,19 @@ func KafkaConn(cfg *config.Config, topic string) *kafka.Conn {
 		panic(err.Error())
 	}
 	return conn
+
+}
+
+func PushMessageToQueue(cfg *config.Config, key, topic string, message ...kafka.Message) {
+	conn, err := kafka.DialLeader(context.Background(), "tcp", cfg.Kafka.Url, topic, 0)
+	if err != nil {
+		panic(err.Error())
+	}
+	defer conn.Close()
+
+	conn.SetReadDeadline(time.Now().Add(10 * time.Second))
+
+	conn.WriteMessages()
 
 }
 
@@ -57,17 +71,17 @@ func KafkaReader(topic string) *kafka.Reader {
 	// return nil
 }
 
-func IsTopicIsAlreadyExits(conn *kafka.Conn, topic string) bool {
-	partition, err := conn.ReadPartitions()
-	if err != nil {
-		panic(err.Error())
-	}
+// func IsTopicIsAlreadyExits(conn *kafka.Conn, topic string) bool {
+// 	partition, err := conn.ReadPartitions()
+// 	if err != nil {
+// 		panic(err.Error())
+// 	}
 
-	for _, p := range partition {
-		if p.Topic == topic {
-			return true
-		}
-	}
+// 	for _, p := range partition {
+// 		if p.Topic == topic {
+// 			return true
+// 		}
+// 	}
 
-	return false
-}
+// 	return false
+// }

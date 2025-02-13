@@ -18,6 +18,7 @@ import (
 	"github.com/guatom999/TicketShop-Movie/utils"
 	"github.com/omise/omise-go"
 	"github.com/omise/omise-go/operations"
+	"github.com/segmentio/kafka-go"
 	"github.com/skip2/go-qrcode"
 )
 
@@ -66,31 +67,34 @@ func (u *paymentUseCase) CheckOutWithCreditCard(req *payment.CheckOutWithCreditC
 	return nil
 }
 
-// func PaymentConsumer(pctx context.Context, cfg *config.Config, topic string) *kafka.Conn {
-// 	conn := queue.KafkaConn(cfg)
+func PaymentConsumer(pctx context.Context, cfg *config.Config, topic string) *kafka.Conn {
+	conn := queue.KafkaConn(cfg, topic)
 
-// 	topicConfigs := make([]kafka.TopicConfig, 0)
+	topicConfigs := []kafka.TopicConfig{
+		{
+			Topic:             "buy",
+			NumPartitions:     1,
+			ReplicationFactor: 1,
+		},
+		{
+			Topic:             "rollback",
+			NumPartitions:     1,
+			ReplicationFactor: 1,
+		},
+	}
 
-// 	if !queue.IsTopicIsAlreadyExits(conn, cfg.Kafka.Topic) {
-// 		topicConfigs = append(topicConfigs, kafka.TopicConfig{
-// 			Topic:             "buy",
-// 			NumPartitions:     1,
-// 			ReplicationFactor: 1,
-// 		})
-// 	}
+	if err := conn.CreateTopics(topicConfigs...); err != nil {
+		log.Printf("Erorr: Create Topic Failed %s", err.Error())
+		panic(err.Error())
+	}
 
-// 	if err := conn.CreateTopics(topicConfigs...); err != nil {
-// 		log.Printf("Erorr: Create Topic Failed %s", err.Error())
-// 		panic(err.Error())
-// 	}
+	return conn
 
-// 	return conn
+}
 
-// }
+func (u *paymentUseCase) BuyTicketConsumer(pctx context.Context, topic string, resCh chan *payment.RollBackReserveSeatRes) {
 
-func BuyTicketConsumer(pctx context.Context, topic string, resCh chan *payment.PaymentReserveRes) {
-
-	reader := queue.KafkaReader("buy-ticket")
+	reader := queue.KafkaReader(topic)
 	defer reader.Close()
 
 }
@@ -102,8 +106,6 @@ func (u *paymentUseCase) BuyTicket(pctx context.Context, cfg *config.Config, req
 
 	req.CustomerId = strings.TrimPrefix(req.CustomerId, "customer:")
 
-	req.Price = req.Price / 100
-
 	if err := u.paymentRepo.ReserveSeat(pctx, cfg, &payment.ReserveSeatReq{
 		MovieName: req.MovieName,
 		MovieId:   req.MovieId,
@@ -112,6 +114,21 @@ func (u *paymentUseCase) BuyTicket(pctx context.Context, cfg *config.Config, req
 		return nil, err
 	}
 
+	// stage1 := new(payment.RollBackReserveSeatRes)
+
+	resCh := make(chan *payment.RollBackReserveSeatRes)
+
+	go u.BuyTicketConsumer(pctx, "roll-back-res", resCh)
+
+	res := <-resCh
+	if res.Error != "" {
+		u.paymentRepo.RollBackReserveSeat(pctx, cfg, &payment.RollBackReservedSeatReq{
+			MovieId: req.MovieId,
+			SeatNo:  req.SeatNo,
+		})
+	}
+
+	// req.Price = req.Price / 100
 	if err := u.CheckOutWithCreditCard(&payment.CheckOutWithCreditCard{Token: req.Token, Price: req.Price}); err != nil {
 		return nil, err
 	}

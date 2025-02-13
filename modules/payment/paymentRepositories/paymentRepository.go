@@ -26,6 +26,7 @@ type (
 		AddTicketToCustomer(pctx context.Context, cfg *config.Config, req *payment.AddCustomerTicket) error
 		GetOffset(pctx context.Context) (int64, error)
 		UpsertOfset(pctx context.Context, offset int64) error
+		RollBackReserveSeat(pctx context.Context, cfg *config.Config, req *payment.RollBackReservedSeatReq) error
 	}
 
 	paymentRepository struct {
@@ -38,18 +39,31 @@ func NewPaymentRepository(db *mongo.Client) PaymentRepositoryService {
 	return &paymentRepository{db: db}
 }
 
-func PaymentConsumer(pctx context.Context, cfg *config.Config, topic string) *kafka.Conn {
+func PaymentProducer(pctx context.Context, cfg *config.Config, topic string) *kafka.Conn {
 	conn := queue.KafkaConn(cfg, topic)
 
-	topicConfigs := make([]kafka.TopicConfig, 0)
-
-	if !queue.IsTopicIsAlreadyExits(conn, cfg.Kafka.Topic) {
-		topicConfigs = append(topicConfigs, kafka.TopicConfig{
-			Topic:             topic,
+	topicConfigs := []kafka.TopicConfig{
+		{
+			Topic:             "buy",
 			NumPartitions:     1,
 			ReplicationFactor: 1,
-		})
+		},
+		{
+			Topic:             "rollback",
+			NumPartitions:     1,
+			ReplicationFactor: 1,
+		},
 	}
+
+	// topicConfigs := make([]kafka.TopicConfig, 0)
+
+	// if !queue.IsTopicIsAlreadyExits(conn, cfg.Kafka.Topic) {
+	// 	topicConfigs = append(topicConfigs, kafka.TopicConfig{
+	// 		Topic:             topic,
+	// 		NumPartitions:     1,
+	// 		ReplicationFactor: 1,
+	// 	})
+	// }
 
 	if err := conn.CreateTopics(topicConfigs...); err != nil {
 		log.Printf("Erorr: Create Topic Failed %s", err.Error())
@@ -103,7 +117,7 @@ func (r *paymentRepository) ReserveSeat(pctx context.Context, cfg *config.Config
 	ctx, cancel := context.WithTimeout(pctx, time.Second*20)
 	defer cancel()
 
-	conn := PaymentConsumer(ctx, cfg, "buy-ticket")
+	conn := PaymentProducer(ctx, cfg, "buy-ticket")
 
 	message := kafka.Message{
 		Value: utils.EncodeMessage(req),
@@ -133,7 +147,7 @@ func (r *paymentRepository) RollBackReserveSeat(pctx context.Context, cfg *confi
 	ctx, cancel := context.WithTimeout(pctx, time.Second*20)
 	defer cancel()
 
-	conn := PaymentConsumer(ctx, cfg, "rollback-seat")
+	conn := PaymentProducer(ctx, cfg, "rollback-seat")
 
 	message := kafka.Message{
 		Value: utils.EncodeMessage(req),
@@ -161,7 +175,7 @@ func (r *paymentRepository) AddTicketToCustomer(pctx context.Context, cfg *confi
 	ctx, cancel := context.WithTimeout(pctx, time.Second*20)
 	defer cancel()
 
-	conn := PaymentConsumer(ctx, cfg, "add-ticket")
+	conn := PaymentProducer(ctx, cfg, "add-ticket")
 
 	message := kafka.Message{
 		Value: utils.EncodeMessage(req),

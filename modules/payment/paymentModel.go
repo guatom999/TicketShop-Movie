@@ -25,11 +25,19 @@ type (
 		MovieName string   `json:"movie_name"`
 		MovieId   string   `json:"movie_id"`
 		SeatNo    []string `json:"seat_no"`
+		Error     string   `json:"error"`
 	}
 
 	RollBackReservedSeatReq struct {
 		MovieId string   `json:"movie_id"`
 		SeatNo  []string `json:"seat_no"`
+		// Error   string   `json:"error"`
+	}
+
+	RollBackReserveSeatRes struct {
+		MovieId     string   `json:"movie_id"`
+		Seat_Number []string `json:"seat_no"`
+		Error       string   `json:"error"`
 	}
 
 	BuyticketRes struct {

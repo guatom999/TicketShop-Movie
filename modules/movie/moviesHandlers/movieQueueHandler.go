@@ -102,7 +102,7 @@ func (h *moviesQueueHandler) RollBackSeat() {
 			fmt.Printf("Error: Unmarshal error %s", err.Error())
 		}
 
-		h.movieUseCase.ReserveSeat(ctx, &movie.ReserveDetailReq{
+		h.movieUseCase.RollbackReserveSeat(ctx, &movie.ReserveDetailReq{
 			MovieId: data.MovieId,
 			SeatNo:  data.Seat_Number,
 		})

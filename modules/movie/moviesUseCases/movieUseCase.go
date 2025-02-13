@@ -24,6 +24,7 @@ type (
 		FindOneMovie(pctx context.Context, movieId string) (*movie.MovieShowCase, error)
 		FindMovieShowTime(pctx context.Context, title string) ([]*movie.MovieShowTimeRes, error)
 		ReserveSeat(pctx context.Context, req *movie.ReserveDetailReq) error
+		RollbackReserveSeat(pctx context.Context, req *movie.ReserveDetailReq) error
 	}
 
 	moviesUseCase struct {
