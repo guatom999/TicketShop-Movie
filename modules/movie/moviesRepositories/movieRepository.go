@@ -30,7 +30,7 @@ type (
 		FindMovieShowtime(pctx context.Context, movieId string) ([]*movie.MovieShowTimeRes, error)
 		GetOneMovieAvaliable(pctx context.Context, req *movie.ReserveDetailReq) (*movie.MovieAvaliable, error)
 		UpdateSeatStatus(pctx context.Context, movidId string, req *movie.MovieAvaliable) error
-		RollbackSeatStatusRes(pctx context.Context, cfg *config.Config, req *movie.RollBackReserveSeatRes) error
+		ReserveSeatRes(pctx context.Context, cfg *config.Config, req *movie.ReserveSeatRes) error
 	}
 
 	moviesrepository struct {
@@ -370,8 +370,6 @@ func (r *moviesrepository) GetOneMovieAvaliable(pctx context.Context, req *movie
 
 	result := new(movie.MovieAvaliable)
 
-	fmt.Println("reqest MovieId is ", req.MovieId)
-
 	if err := col.FindOne(ctx, bson.M{"_id": utils.ConvertStringToObjectId(req.MovieId)}).Decode(result); err != nil {
 		log.Printf("Error: Find Seat Status Failed:%s", err.Error())
 		return nil, errors.New("error: find seat status failed")
@@ -411,25 +409,27 @@ func (r *moviesrepository) UpdateSeatStatus(pctx context.Context, movidId string
 	db := r.db.Database("movie_db")
 	col := db.Collection("movie_available")
 
-	updateResult, err := col.UpdateOne(ctx, bson.M{"_id": utils.ConvertStringToObjectId(movidId)}, bson.M{"$set": req})
+	_, err := col.UpdateOne(ctx, bson.M{"_id": utils.ConvertStringToObjectId(movidId)}, bson.M{"$set": req})
 	if err != nil {
 		log.Printf("Error: Update Seat Status Failed %v", err)
 		return errors.New("error: update seat status failed")
 	}
 
-	log.Printf("update status is :%v", updateResult)
+	// log.Printf("update status is :%v", updateResult)
 
 	return nil
 }
 
-func (r *moviesrepository) RollbackSeatStatusRes(pctx context.Context, cfg *config.Config, req *movie.RollBackReserveSeatRes) error {
-
+func (r *moviesrepository) ReserveSeatRes(pctx context.Context, cfg *config.Config, req *movie.ReserveSeatRes) error {
 	ctx, cancel := context.WithTimeout(pctx, time.Second*20)
 	defer cancel()
 
-	conn := MovieProducer(ctx, cfg, "roll-back")
+	conn := MovieProducer(ctx, cfg, "rollback")
+
+	fmt.Println("req . Error is ", req.Error)
 
 	message := kafka.Message{
+		Key:   []byte("payment"),
 		Value: utils.EncodeMessage(req),
 	}
 
@@ -451,30 +451,34 @@ func (r *moviesrepository) RollbackSeatStatusRes(pctx context.Context, cfg *conf
 	return nil
 }
 
-func (r *moviesrepository) ReserveSeat(pctx context.Context, req *movie.ReserveDetailReq) error {
+// func (r *moviesrepository) ReserveSeatRes(pctx context.Context, cfg *config.Config, req *movie.RollBackReserveSeatRes) error {
 
-	// ctx, cancel := context.WithTimeout(pctx, time.Second*20)
-	// defer cancel()
+// 	ctx, cancel := context.WithTimeout(pctx, time.Second*20)
+// 	defer cancel()
 
-	// db := r.db.Database("movie_db")
-	// col := db.Collection("movie_available")
+// 	conn := MovieProducer(ctx, cfg, "roll-back-res")
 
-	// if !r.IsSeatAvailable(ctx, &movie.ReserveDetailReq{}) {
-	// 	log.Printf("Error: Seat is Not Available")
-	// 	return errors.New("errro: seat is not available")
-	// }
+// 	message := kafka.Message{
+// 		Value: utils.EncodeMessage(req),
+// 	}
 
-	// col.UpdateOne(ctx, bson.M{"movie_id": req.MovieId}, bson.D{{"$set", bson.D{{"seat_available"}}}})
+// 	conn.SetReadDeadline(time.Now().Add(10 * time.Second))
+// 	_, err := conn.WriteMessages(message)
 
-	// col.UpdateOne(
-	// 	ctx,
-	// 	bson.M{"_id": utils.ConvertToObjectId(req.MovieId)},
-	// 	bson.M{"$set": bson.M{
-	// 		"seat_available":
-	// 	}})
+// 	if err != nil {
+// 		log.Fatal("failed to write messages:", err)
+// 		return errors.New("error: failed to send message")
+// 	}
 
-	return nil
-}
+// 	if err := conn.Close(); err != nil {
+// 		log.Fatal("failed to close writer:", err)
+// 		return errors.New("error: failed to close broker")
+// 	}
+
+// 	fmt.Println("Send Message Success")
+
+// 	return nil
+// }
 
 // func (r *moviesrepository) FindManyMovies(pctx context.Context, filter primitive.ObjectID, opts []*options.FindOptions) ([]*movie.MovieData, error) {
 

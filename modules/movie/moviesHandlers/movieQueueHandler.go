@@ -64,20 +64,22 @@ func (h *moviesQueueHandler) ReserveSeat() {
 	for {
 
 		message, err := reader.ReadMessage(ctx)
+		fmt.Println("ReserveSeat Case -------------->")
 		if err != nil {
 			log.Printf("Error reading message: %s", err.Error())
 			break
 		}
 
-		if err := json.Unmarshal(message.Value, data); err != nil {
-			fmt.Printf("Error: Unmarshal error %s", err.Error())
+		if string(message.Key) == "movie" {
+			if err := json.Unmarshal(message.Value, data); err != nil {
+				fmt.Printf("Error: Unmarshal error %s", err.Error())
+			}
+
+			h.movieUseCase.ReserveSeat(ctx, &movie.ReserveDetailReq{
+				MovieId: data.MovieId,
+				SeatNo:  data.Seat_Number,
+			})
 		}
-
-		h.movieUseCase.ReserveSeat(ctx, &movie.ReserveDetailReq{
-			MovieId: data.MovieId,
-			SeatNo:  data.Seat_Number,
-		})
-
 	}
 }
 
@@ -85,27 +87,28 @@ func (h *moviesQueueHandler) RollBackSeat() {
 
 	ctx := context.Background()
 
-	data := new(movie.ReserveSeatReqTest)
+	data := new(movie.RollBackReservedSeatReq)
 
-	reader := queue.KafkaReader("rollback-seat")
+	reader := queue.KafkaReader("rollback")
 	defer reader.Close()
 
 	for {
-
 		message, err := reader.ReadMessage(ctx)
+		fmt.Println("RollBackSeat Case -------------->")
 		if err != nil {
 			log.Printf("Error reading message: %s", err.Error())
 			break
 		}
 
-		if err := json.Unmarshal(message.Value, data); err != nil {
-			fmt.Printf("Error: Unmarshal error %s", err.Error())
+		if string(message.Key) == "movie" {
+			if err := json.Unmarshal(message.Value, data); err != nil {
+				fmt.Printf("Error: Unmarshal error %s", err.Error())
+			}
+
+			h.movieUseCase.RollbackReserveSeat(ctx, &movie.ReserveDetailReq{
+				MovieId: data.MovieId,
+				SeatNo:  data.SeatNo,
+			})
 		}
-
-		h.movieUseCase.RollbackReserveSeat(ctx, &movie.ReserveDetailReq{
-			MovieId: data.MovieId,
-			SeatNo:  data.Seat_Number,
-		})
-
 	}
 }

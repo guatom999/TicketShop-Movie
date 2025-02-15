@@ -2,6 +2,7 @@ package paymentUseCases
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -36,6 +37,11 @@ type (
 		bucketName  string
 		uploadPath  string
 		cl          *storage.Client
+	}
+
+	UploadResponse struct {
+		Filename string `json:"filename"`
+		URL      string `json:"url"`
 	}
 )
 
@@ -97,12 +103,38 @@ func (u *paymentUseCase) BuyTicketConsumer(pctx context.Context, topic string, r
 	reader := queue.KafkaReader(topic)
 	defer reader.Close()
 
+	data := new(payment.RollBackReserveSeatRes)
+
+	for {
+
+		message, err := reader.ReadMessage(pctx)
+		if err != nil {
+			log.Printf("Error reading message: %s", err.Error())
+			break
+		}
+
+		if string(message.Key) == "payment" {
+
+			fmt.Println("BuyTicketConsumer ----------------------------->", message.Key)
+
+			if err := json.Unmarshal(message.Value, data); err != nil {
+				fmt.Printf("Error: Unmarshal error %s", err.Error())
+			}
+
+			resCh <- data
+		}
+
+	}
+	close(resCh)
 }
 
 func (u *paymentUseCase) BuyTicket(pctx context.Context, cfg *config.Config, req *payment.MovieBuyReq) (*payment.BuyticketRes, error) {
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
-	defer cancel()
+	stage1 := new(payment.RollBackReserveSeatRes)
+
+	resCh := make(chan *payment.RollBackReserveSeatRes)
+
+	go u.BuyTicketConsumer(pctx, "rollback", resCh)
 
 	req.CustomerId = strings.TrimPrefix(req.CustomerId, "customer:")
 
@@ -114,22 +146,34 @@ func (u *paymentUseCase) BuyTicket(pctx context.Context, cfg *config.Config, req
 		return nil, err
 	}
 
-	// stage1 := new(payment.RollBackReserveSeatRes)
+	select {
+	case res := <-resCh:
+		if res != nil {
+			fmt.Println("res is", res)
+			stage1 = &payment.RollBackReserveSeatRes{
+				MovieId:     res.MovieId,
+				Seat_Number: res.Seat_Number,
+				Error:       res.Error,
+			}
+		}
+	case <-time.After(time.Second * 10):
+		fmt.Println("Timeout waiting for rollback response")
+		return nil, errors.New("timeout waiting for rollback response")
+	}
 
-	resCh := make(chan *payment.RollBackReserveSeatRes)
-
-	go u.BuyTicketConsumer(pctx, "roll-back-res", resCh)
-
-	res := <-resCh
-	if res.Error != "" {
+	if stage1.Error != "" {
 		u.paymentRepo.RollBackReserveSeat(pctx, cfg, &payment.RollBackReservedSeatReq{
 			MovieId: req.MovieId,
 			SeatNo:  req.SeatNo,
 		})
 	}
 
-	// req.Price = req.Price / 100
 	if err := u.CheckOutWithCreditCard(&payment.CheckOutWithCreditCard{Token: req.Token, Price: req.Price}); err != nil {
+		fmt.Println("Error :::::::::::::::::::::::::::>", err.Error())
+		u.paymentRepo.RollBackReserveSeat(pctx, cfg, &payment.RollBackReservedSeatReq{
+			MovieId: req.MovieId,
+			SeatNo:  req.SeatNo,
+		})
 		return nil, err
 	}
 
@@ -144,7 +188,7 @@ func (u *paymentUseCase) BuyTicket(pctx context.Context, cfg *config.Config, req
 
 	destination := fmt.Sprintf(u.uploadPath + utils.RandFileName())
 
-	fileUrl, err := gcpfile.UploadFile(u.cfg, u.cl, ctx, destination, png)
+	fileUrl, err := gcpfile.UploadFile(u.cfg, u.cl, pctx, destination, png)
 	if err != nil {
 		log.Printf("Error: Upload file failed: %s", err.Error())
 		return nil, errors.New("error:failed to upload file")
@@ -176,11 +220,6 @@ func (u *paymentUseCase) BuyTicket(pctx context.Context, cfg *config.Config, req
 		TransactionId: orderNumber,
 		Url:           fileUrl,
 	}, nil
-}
-
-type UploadResponse struct {
-	Filename string `json:"filename"`
-	URL      string `json:"url"`
 }
 
 func (c *paymentUseCase) UploadFileTest(file multipart.File, object string) error {

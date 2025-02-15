@@ -8,11 +8,12 @@ import (
 
 func (s *server) MovieModule() {
 	movieRepo := moviesRepositories.NewMoviesrepository(s.db, s.redis)
-	movieUseCase := moviesUseCases.NewmoviesUseCase(movieRepo)
+	movieUseCase := moviesUseCases.NewmoviesUseCase(s.cfg, movieRepo)
 	movieHandler := moviesHandlers.NewMoviesHandler(movieUseCase)
 	movieQueueHandler := moviesHandlers.NewMoviesQueueHandler(s.cfg, movieUseCase)
 
 	go movieQueueHandler.ReserveSeat()
+	go movieQueueHandler.RollBackSeat()
 
 	movieRouter := s.app.Group("/movie")
 

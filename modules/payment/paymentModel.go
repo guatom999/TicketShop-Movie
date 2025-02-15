@@ -31,7 +31,7 @@ type (
 	RollBackReservedSeatReq struct {
 		MovieId string   `json:"movie_id"`
 		SeatNo  []string `json:"seat_no"`
-		// Error   string   `json:"error"`
+		Error   string   `json:"error"`
 	}
 
 	RollBackReserveSeatRes struct {

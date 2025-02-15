@@ -3,6 +3,7 @@ package queue
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/guatom999/TicketShop-Movie/config"
@@ -28,47 +29,47 @@ func PushMessageToQueue(cfg *config.Config, key, topic string, message ...kafka.
 
 	conn.SetReadDeadline(time.Now().Add(10 * time.Second))
 
-	conn.WriteMessages()
+	for _, msg := range message {
+		msg.Key = []byte(key)
+		if _, err := conn.WriteMessages(msg); err != nil {
+			log.Printf("Error writing message: %s", err.Error())
+		}
+	}
 
 }
 
 func KafkaReader(topic string) *kafka.Reader {
-	// Define topic and consumer group
-	// topic := "your-topic"
 	groupID := "my-consumer-group"
 
-	// Reader configuration with latest offset
 	readerConfig := kafka.ReaderConfig{
-		Brokers:     []string{"localhost:9092"}, // Adjust broker address(es)
+		Brokers:     []string{"localhost:9092"},
 		GroupID:     groupID,
 		Topic:       topic,
 		StartOffset: kafka.LastOffset,
 	}
 
-	// Create reader instance
 	reader := kafka.NewReader(readerConfig)
 
 	fmt.Println("Starting consumer...")
 
-	// defer reader.Close()
-
 	return reader
+}
 
-	// for {
-	// 	// Read message batch with timeout
-	// 	msg, err := reader.ReadMessage(context.Background())
-	// 	if err != nil {
-	// 		fmt.Println("Error reading message:", err)
-	// 		break
-	// 	}
+func ReadMessages(reader *kafka.Reader, Key string) {
+	for {
+		msg, err := reader.ReadMessage(context.Background())
+		if err != nil {
+			fmt.Println("Error reading message:", err)
+			break
+		}
 
-	// 	// Process the message (e.g., extract key and value)
-	// 	fmt.Printf("Received message: key=%s, value=%s\n", msg.Key, msg.Value)
-	// }
-
-	// fmt.Println("Consumer stopped.")
-
-	// return nil
+		if string(msg.Key) == Key {
+			fmt.Printf("Received message: key=%s, value=%s\n", string(msg.Key), string(msg.Value))
+			// Process the message
+		} else {
+			fmt.Printf("Skipping message with key=%s\n", string(msg.Key))
+		}
+	}
 }
 
 // func IsTopicIsAlreadyExits(conn *kafka.Conn, topic string) bool {

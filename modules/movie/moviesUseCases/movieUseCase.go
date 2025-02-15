@@ -189,7 +189,7 @@ func (u *moviesUseCase) ReserveSeat(pctx context.Context, req *movie.ReserveDeta
 	result, err := u.moviesRepo.GetOneMovieAvaliable(pctx, req)
 	if err != nil {
 		// u.moviesRepo.RollbackSeatStatusRes(pctx, result)
-		u.moviesRepo.RollbackSeatStatusRes(pctx, u.cfg, &movie.RollBackReserveSeatRes{
+		u.moviesRepo.ReserveSeatRes(pctx, u.cfg, &movie.ReserveSeatRes{
 			MovieId:     req.MovieId,
 			Seat_Number: req.SeatNo,
 			Error:       err.Error(),
@@ -204,7 +204,7 @@ func (u *moviesUseCase) ReserveSeat(pctx context.Context, req *movie.ReserveDeta
 				break
 			} else if x == (len(result.SeatAvailable) - 1) {
 
-				u.moviesRepo.RollbackSeatStatusRes(pctx, u.cfg, &movie.RollBackReserveSeatRes{
+				u.moviesRepo.ReserveSeatRes(pctx, u.cfg, &movie.ReserveSeatRes{
 					MovieId:     req.MovieId,
 					Seat_Number: req.SeatNo,
 					Error:       errors.New("error: no seat match").Error(),
@@ -215,7 +215,7 @@ func (u *moviesUseCase) ReserveSeat(pctx context.Context, req *movie.ReserveDeta
 	}
 
 	if err := u.moviesRepo.UpdateSeatStatus(pctx, req.MovieId, result); err != nil {
-		u.moviesRepo.RollbackSeatStatusRes(pctx, u.cfg, &movie.RollBackReserveSeatRes{
+		u.moviesRepo.ReserveSeatRes(pctx, u.cfg, &movie.ReserveSeatRes{
 			MovieId:     req.MovieId,
 			Seat_Number: req.SeatNo,
 			Error:       err.Error(),
@@ -223,10 +223,18 @@ func (u *moviesUseCase) ReserveSeat(pctx context.Context, req *movie.ReserveDeta
 		return err
 	}
 
+	u.moviesRepo.ReserveSeatRes(pctx, u.cfg, &movie.ReserveSeatRes{
+		MovieId:     req.MovieId,
+		Seat_Number: req.SeatNo,
+		Error:       "",
+	})
+
 	return nil
 }
 
 func (u *moviesUseCase) RollbackReserveSeat(pctx context.Context, req *movie.ReserveDetailReq) error {
+
+	fmt.Println("req movie Id is ::::::::::::::::::::::::::>", req.MovieId)
 
 	result, err := u.moviesRepo.GetOneMovieAvaliable(pctx, req)
 	if err != nil {

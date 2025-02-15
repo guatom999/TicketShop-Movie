@@ -42,6 +42,7 @@ func (h *inventoryQueueHanlder) AddCustomerTransaction() {
 	for {
 
 		message, err := reader.ReadMessage(ctx)
+		fmt.Println("add-ticket case ----------------------------->")
 		if err != nil {
 			log.Printf("Error reading message: %s", err.Error())
 			break

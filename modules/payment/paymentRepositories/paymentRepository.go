@@ -120,6 +120,7 @@ func (r *paymentRepository) ReserveSeat(pctx context.Context, cfg *config.Config
 	conn := PaymentProducer(ctx, cfg, "buy-ticket")
 
 	message := kafka.Message{
+		Key:   []byte("movie"),
 		Value: utils.EncodeMessage(req),
 	}
 
@@ -147,7 +148,7 @@ func (r *paymentRepository) RollBackReserveSeat(pctx context.Context, cfg *confi
 	ctx, cancel := context.WithTimeout(pctx, time.Second*20)
 	defer cancel()
 
-	conn := PaymentProducer(ctx, cfg, "rollback-seat")
+	conn := PaymentProducer(ctx, cfg, "rollback")
 
 	message := kafka.Message{
 		Value: utils.EncodeMessage(req),
