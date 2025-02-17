@@ -223,6 +223,8 @@ func (u *moviesUseCase) ReserveSeat(pctx context.Context, req *movie.ReserveDeta
 		return err
 	}
 
+	fmt.Println("Wait for send Data to kafka")
+
 	u.moviesRepo.ReserveSeatRes(pctx, u.cfg, &movie.ReserveSeatRes{
 		MovieId:     req.MovieId,
 		Seat_Number: req.SeatNo,

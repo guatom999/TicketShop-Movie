@@ -46,13 +46,23 @@ func NewMoviesrepository(db *mongo.Client, redis *redis.Client) MoviesRepository
 func MovieProducer(pctx context.Context, cfg *config.Config, topic string) *kafka.Conn {
 	conn := queue.KafkaConn(cfg, topic)
 
-	topicConfig := kafka.TopicConfig{
-		Topic:             "buy",
+	topicConfigs := kafka.TopicConfig{
+		Topic:             string(topic),
 		NumPartitions:     1,
 		ReplicationFactor: 1,
 	}
 
-	if err := conn.CreateTopics(topicConfig); err != nil {
+	// topicConfigs := make([]kafka.TopicConfig, 0)
+
+	// if !queue.IsTopicIsAlreadyExits(conn, cfg.Kafka.Topic) {
+	// 	topicConfigs = append(topicConfigs, kafka.TopicConfig{
+	// 		Topic:             topic,
+	// 		NumPartitions:     1,
+	// 		ReplicationFactor: 1,
+	// 	})
+	// }
+
+	if err := conn.CreateTopics(topicConfigs); err != nil {
 		log.Printf("Erorr: Create Topic Failed %s", err.Error())
 		panic(err.Error())
 	}
@@ -426,14 +436,12 @@ func (r *moviesrepository) ReserveSeatRes(pctx context.Context, cfg *config.Conf
 
 	conn := MovieProducer(ctx, cfg, "rollback")
 
-	fmt.Println("req . Error is ", req.Error)
-
 	message := kafka.Message{
 		Key:   []byte("payment"),
 		Value: utils.EncodeMessage(req),
 	}
 
-	conn.SetReadDeadline(time.Now().Add(10 * time.Second))
+	// conn.SetWriteDeadline(time.Now().Add(20 * time.Second))
 	_, err := conn.WriteMessages(message)
 
 	if err != nil {

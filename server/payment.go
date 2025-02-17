@@ -21,6 +21,12 @@ func (s *server) PaymentModule() {
 	paymentUseCase := paymentUseCases.NewPaymentUseCase(paymentRepo, s.cfg, s.omise, client)
 	paymentHandler := paymentHandler.NewPaymentHanlder(s.cfg, paymentUseCase)
 
+	// ctx := context.Background()
+
+	// resCh := make(chan *payment.RollBackReserveSeatRes)
+
+	// go paymentUseCase.BuyTicketConsumer(ctx, "rollback", resCh)
+
 	// _ = paymentHandler
 
 	router := s.app.Group("/payment")

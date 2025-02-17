@@ -58,19 +58,20 @@ func (h *moviesQueueHandler) ReserveSeat() {
 
 	data := new(movie.ReserveSeatReqTest)
 
-	reader := queue.KafkaReader("buy-ticket")
+	reader := queue.KafkaReader("buy-ticket", "movie-group")
 	defer reader.Close()
 
 	for {
 
 		message, err := reader.ReadMessage(ctx)
-		fmt.Println("ReserveSeat Case -------------->")
 		if err != nil {
 			log.Printf("Error reading message: %s", err.Error())
 			break
 		}
 
 		if string(message.Key) == "movie" {
+			fmt.Println("ReserveSeat Case -------------->")
+
 			if err := json.Unmarshal(message.Value, data); err != nil {
 				fmt.Printf("Error: Unmarshal error %s", err.Error())
 			}
@@ -89,18 +90,18 @@ func (h *moviesQueueHandler) RollBackSeat() {
 
 	data := new(movie.RollBackReservedSeatReq)
 
-	reader := queue.KafkaReader("rollback")
+	reader := queue.KafkaReader("rollback", "movie-group")
 	defer reader.Close()
 
 	for {
 		message, err := reader.ReadMessage(ctx)
-		fmt.Println("RollBackSeat Case -------------->")
 		if err != nil {
 			log.Printf("Error reading message: %s", err.Error())
 			break
 		}
 
 		if string(message.Key) == "movie" {
+			fmt.Println("RollBackSeat Case -------------->")
 			if err := json.Unmarshal(message.Value, data); err != nil {
 				fmt.Printf("Error: Unmarshal error %s", err.Error())
 			}

@@ -19,7 +19,6 @@ import (
 	"github.com/guatom999/TicketShop-Movie/utils"
 	"github.com/omise/omise-go"
 	"github.com/omise/omise-go/operations"
-	"github.com/segmentio/kafka-go"
 	"github.com/skip2/go-qrcode"
 )
 
@@ -28,6 +27,7 @@ type (
 		BuyTicket(pctx context.Context, cfg *config.Config, req *payment.MovieBuyReq) (*payment.BuyticketRes, error)
 		CheckOutWithCreditCard(req *payment.CheckOutWithCreditCard) error
 		UploadFileTest(file multipart.File, object string) error
+		// BuyTicketConsumer(pctx context.Context, topic string, resCh chan<- *payment.RollBackReserveSeatRes)
 	}
 
 	paymentUseCase struct {
@@ -46,6 +46,7 @@ type (
 )
 
 func NewPaymentUseCase(paymentRepo paymentRepositories.PaymentRepositoryService, cfg *config.Config, opnClient *omise.Client, cli *storage.Client) PaymentUseCaseService {
+
 	return &paymentUseCase{
 		paymentRepo: paymentRepo,
 		cfg:         cfg,
@@ -73,68 +74,71 @@ func (u *paymentUseCase) CheckOutWithCreditCard(req *payment.CheckOutWithCreditC
 	return nil
 }
 
-func PaymentConsumer(pctx context.Context, cfg *config.Config, topic string) *kafka.Conn {
-	conn := queue.KafkaConn(cfg, topic)
+// func PaymentConsumer(pctx context.Context, cfg *config.Config, topic string) *kafka.Conn {
+// 	conn := queue.KafkaConn(cfg, topic)
 
-	topicConfigs := []kafka.TopicConfig{
-		{
-			Topic:             "buy",
-			NumPartitions:     1,
-			ReplicationFactor: 1,
-		},
-		{
-			Topic:             "rollback",
-			NumPartitions:     1,
-			ReplicationFactor: 1,
-		},
-	}
+// 	topicConfigs := kafka.TopicConfig{
+// 		Topic:             topic,
+// 		NumPartitions:     1,
+// 		ReplicationFactor: 1,
+// 	}
 
-	if err := conn.CreateTopics(topicConfigs...); err != nil {
-		log.Printf("Erorr: Create Topic Failed %s", err.Error())
-		panic(err.Error())
-	}
+// 	if err := conn.CreateTopics(topicConfigs); err != nil {
+// 		log.Printf("Erorr: Create Topic Failed %s", err.Error())
+// 		panic(err.Error())
+// 	}
 
-	return conn
+// 	return conn
 
-}
+// }
 
-func (u *paymentUseCase) BuyTicketConsumer(pctx context.Context, topic string, resCh chan *payment.RollBackReserveSeatRes) {
-
-	reader := queue.KafkaReader(topic)
+func (u *paymentUseCase) BuyTicketConsumer(pctx context.Context, cfg *config.Config, topic string, key string, resCh chan<- *payment.RollBackReserveSeatRes) {
+	reader := queue.KafkaReader(topic, "payment-group")
 	defer reader.Close()
 
 	data := new(payment.RollBackReserveSeatRes)
 
 	for {
-
-		message, err := reader.ReadMessage(pctx)
-		if err != nil {
-			log.Printf("Error reading message: %s", err.Error())
-			break
-		}
-
-		if string(message.Key) == "payment" {
-
-			fmt.Println("BuyTicketConsumer ----------------------------->", message.Key)
-
-			if err := json.Unmarshal(message.Value, data); err != nil {
-				fmt.Printf("Error: Unmarshal error %s", err.Error())
+		select {
+		case <-pctx.Done():
+			log.Println("BuyTicketConsumer context cancelled")
+			close(resCh)
+			return
+		default:
+			msg, err := reader.ReadMessage(pctx)
+			if err != nil {
+				log.Printf("Error reading message: %s", err.Error())
+				close(resCh)
+				return
 			}
 
-			resCh <- data
-		}
+			if string(msg.Key) == key {
+				fmt.Println("BuyTicketConsumer ----------------------------->", string(msg.Key))
 
+				if err := json.Unmarshal(msg.Value, data); err != nil {
+					fmt.Printf("Error: Unmarshal error %s", err.Error())
+				}
+
+				fmt.Println("data is", data)
+
+				resCh <- data
+				close(resCh) // ปิด channel หลังจากส่งข้อมูล
+				return
+			}
+		}
 	}
-	close(resCh)
 }
 
 func (u *paymentUseCase) BuyTicket(pctx context.Context, cfg *config.Config, req *payment.MovieBuyReq) (*payment.BuyticketRes, error) {
+
+	_, cancel := context.WithTimeout(context.Background(), time.Second*30)
+	defer cancel()
 
 	stage1 := new(payment.RollBackReserveSeatRes)
 
 	resCh := make(chan *payment.RollBackReserveSeatRes)
 
-	go u.BuyTicketConsumer(pctx, "rollback", resCh)
+	go u.BuyTicketConsumer(pctx, cfg, "rollback", "payment", resCh)
 
 	req.CustomerId = strings.TrimPrefix(req.CustomerId, "customer:")
 
@@ -168,8 +172,29 @@ func (u *paymentUseCase) BuyTicket(pctx context.Context, cfg *config.Config, req
 		})
 	}
 
+	// select {
+	// case res := <-resCh:
+	// 	if res != nil {
+	// 		fmt.Println("res is", res)
+	// 		stage1 = &payment.RollBackReserveSeatRes{
+	// 			MovieId:     res.MovieId,
+	// 			Seat_Number: res.Seat_Number,
+	// 			Error:       res.Error,
+	// 		}
+	// 	}
+	// case <-time.After(time.Second * 10):
+	// 	fmt.Println("Timeout waiting for rollback response")
+	// 	return nil, errors.New("timeout waiting for rollback response")
+	// }
+
+	// if stage1.Error != "" {
+	// 	u.paymentRepo.RollBackReserveSeat(pctx, cfg, &payment.RollBackReservedSeatReq{
+	// 		MovieId: req.MovieId,
+	// 		SeatNo:  req.SeatNo,
+	// 	})
+	// }
+
 	if err := u.CheckOutWithCreditCard(&payment.CheckOutWithCreditCard{Token: req.Token, Price: req.Price}); err != nil {
-		fmt.Println("Error :::::::::::::::::::::::::::>", err.Error())
 		u.paymentRepo.RollBackReserveSeat(pctx, cfg, &payment.RollBackReservedSeatReq{
 			MovieId: req.MovieId,
 			SeatNo:  req.SeatNo,
@@ -183,7 +208,7 @@ func (u *paymentUseCase) BuyTicket(pctx context.Context, cfg *config.Config, req
 	png, err := qrcode.Encode(reqQrCode, qrcode.Medium, 256)
 	if err != nil {
 		log.Printf("Error: Failed to create qrcode file: %s", err.Error())
-		return nil, errors.New("error:failed to create qrcode file")
+		return nil, errors.New("error: failed to create qrcode file")
 	}
 
 	destination := fmt.Sprintf(u.uploadPath + utils.RandFileName())
@@ -191,7 +216,7 @@ func (u *paymentUseCase) BuyTicket(pctx context.Context, cfg *config.Config, req
 	fileUrl, err := gcpfile.UploadFile(u.cfg, u.cl, pctx, destination, png)
 	if err != nil {
 		log.Printf("Error: Upload file failed: %s", err.Error())
-		return nil, errors.New("error:failed to upload file")
+		return nil, errors.New("error: failed to upload file")
 	}
 
 	orderNumber := utils.RandomString()
@@ -211,7 +236,7 @@ func (u *paymentUseCase) BuyTicket(pctx context.Context, cfg *config.Config, req
 		Price:         req.Price,
 	}); err != nil {
 		fmt.Printf("Error: Failed to add ticket %s", err.Error())
-		return nil, errors.New("error:failed to add ticket")
+		return nil, errors.New("error: failed to add ticket")
 	}
 
 	fmt.Println("fileUs", fileUrl)

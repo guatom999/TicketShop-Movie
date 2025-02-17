@@ -38,8 +38,7 @@ func PushMessageToQueue(cfg *config.Config, key, topic string, message ...kafka.
 
 }
 
-func KafkaReader(topic string) *kafka.Reader {
-	groupID := "my-consumer-group"
+func KafkaReader(topic, groupID string) *kafka.Reader {
 
 	readerConfig := kafka.ReaderConfig{
 		Brokers:     []string{"localhost:9092"},
@@ -55,22 +54,37 @@ func KafkaReader(topic string) *kafka.Reader {
 	return reader
 }
 
-func ReadMessages(reader *kafka.Reader, Key string) {
-	for {
-		msg, err := reader.ReadMessage(context.Background())
-		if err != nil {
-			fmt.Println("Error reading message:", err)
-			break
-		}
+// func ReadMessages(conn *kafka.Conn, key string) {
+// 	for {
 
-		if string(msg.Key) == Key {
-			fmt.Printf("Received message: key=%s, value=%s\n", string(msg.Key), string(msg.Value))
-			// Process the message
-		} else {
-			fmt.Printf("Skipping message with key=%s\n", string(msg.Key))
-		}
-	}
-}
+// 		msg, err := conn.ReadMessage(10e6) // 10e6 is the maximum size of the message to read
+// 		if err != nil {
+// 			fmt.Println("Error reading message:", err)
+// 			break
+// 		}
+
+// 		if string(msg.Key) == key {
+// 			fmt.Printf("Received message: key=%s, value=%s\n", string(msg.Key), string(msg.Value))
+// 		}
+// 	}
+// }
+
+// func ReadMessages(reader *kafka.Reader, Key string) {
+// 	for {
+// 		msg, err := reader.ReadMessage(context.Background())
+// 		if err != nil {
+// 			fmt.Println("Error reading message:", err)
+// 			break
+// 		}
+
+// 		if string(msg.Key) == Key {
+// 			fmt.Printf("Received message: key=%s, value=%s\n", string(msg.Key), string(msg.Value))
+// 			// Process the message
+// 		} else {
+// 			fmt.Printf("Skipping message with key=%s\n", string(msg.Key))
+// 		}
+// 	}
+// }
 
 // func IsTopicIsAlreadyExits(conn *kafka.Conn, topic string) bool {
 // 	partition, err := conn.ReadPartitions()
