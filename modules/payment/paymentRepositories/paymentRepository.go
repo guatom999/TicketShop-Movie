@@ -42,17 +42,23 @@ func NewPaymentRepository(db *mongo.Client) PaymentRepositoryService {
 func PaymentProducer(pctx context.Context, cfg *config.Config, topic string) *kafka.Conn {
 	conn := queue.KafkaConn(cfg, topic)
 
-	topicConfigs := []kafka.TopicConfig{
-		{
-			Topic:             "buy",
-			NumPartitions:     1,
-			ReplicationFactor: 1,
-		},
-		{
-			Topic:             "rollback",
-			NumPartitions:     1,
-			ReplicationFactor: 1,
-		},
+	// topicConfigs := []kafka.TopicConfig{
+	// 	{
+	// 		Topic:             "buy",
+	// 		NumPartitions:     1,
+	// 		ReplicationFactor: 1,
+	// 	},
+	// 	{
+	// 		Topic:             "rollback",
+	// 		NumPartitions:     1,
+	// 		ReplicationFactor: 1,
+	// 	},
+	// }
+
+	topicConfigs := kafka.TopicConfig{
+		Topic:             topic,
+		NumPartitions:     1,
+		ReplicationFactor: 1,
 	}
 
 	// topicConfigs := make([]kafka.TopicConfig, 0)
@@ -65,7 +71,7 @@ func PaymentProducer(pctx context.Context, cfg *config.Config, topic string) *ka
 	// 	})
 	// }
 
-	if err := conn.CreateTopics(topicConfigs...); err != nil {
+	if err := conn.CreateTopics(topicConfigs); err != nil {
 		log.Printf("Erorr: Create Topic Failed %s", err.Error())
 		panic(err.Error())
 	}
@@ -117,7 +123,8 @@ func (r *paymentRepository) ReserveSeat(pctx context.Context, cfg *config.Config
 	ctx, cancel := context.WithTimeout(pctx, time.Second*20)
 	defer cancel()
 
-	conn := PaymentProducer(ctx, cfg, "buy-ticket")
+	// conn := PaymentProducer(ctx, cfg, "buy-ticket")
+	conn := PaymentProducer(ctx, cfg, "reserve-seat")
 
 	message := kafka.Message{
 		Key:   []byte("movie"),
@@ -151,6 +158,7 @@ func (r *paymentRepository) RollBackReserveSeat(pctx context.Context, cfg *confi
 	conn := PaymentProducer(ctx, cfg, "rollback")
 
 	message := kafka.Message{
+		Key:   []byte("movie"),
 		Value: utils.EncodeMessage(req),
 	}
 

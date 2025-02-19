@@ -58,7 +58,7 @@ func (h *moviesQueueHandler) ReserveSeat() {
 
 	data := new(movie.ReserveSeatReqTest)
 
-	reader := queue.KafkaReader("buy-ticket", "movie-group")
+	reader := queue.KafkaReader("reserve-seat", "reserve-seat-req-group")
 	defer reader.Close()
 
 	for {
@@ -90,7 +90,7 @@ func (h *moviesQueueHandler) RollBackSeat() {
 
 	data := new(movie.RollBackReservedSeatReq)
 
-	reader := queue.KafkaReader("rollback", "movie-group")
+	reader := queue.KafkaReader("rollback", "roll-back-seat-req-group")
 	defer reader.Close()
 
 	for {

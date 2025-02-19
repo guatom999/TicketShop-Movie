@@ -92,8 +92,8 @@ func (u *paymentUseCase) CheckOutWithCreditCard(req *payment.CheckOutWithCreditC
 
 // }
 
-func (u *paymentUseCase) BuyTicketConsumer(pctx context.Context, cfg *config.Config, topic string, key string, resCh chan<- *payment.RollBackReserveSeatRes) {
-	reader := queue.KafkaReader(topic, "payment-group")
+func (u *paymentUseCase) BuyTicketConsumer(pctx context.Context, cfg *config.Config, groupId string, topic string, key string, resCh chan<- *payment.RollBackReserveSeatRes) {
+	reader := queue.KafkaReader(topic, groupId)
 	defer reader.Close()
 
 	data := new(payment.RollBackReserveSeatRes)
@@ -119,10 +119,10 @@ func (u *paymentUseCase) BuyTicketConsumer(pctx context.Context, cfg *config.Con
 					fmt.Printf("Error: Unmarshal error %s", err.Error())
 				}
 
-				fmt.Println("data is", data)
+				// fmt.Println("data is", data)
 
 				resCh <- data
-				close(resCh) // ปิด channel หลังจากส่งข้อมูล
+				close(resCh)
 				return
 			}
 		}
@@ -138,7 +138,7 @@ func (u *paymentUseCase) BuyTicket(pctx context.Context, cfg *config.Config, req
 
 	resCh := make(chan *payment.RollBackReserveSeatRes)
 
-	go u.BuyTicketConsumer(pctx, cfg, "rollback", "payment", resCh)
+	go u.BuyTicketConsumer(pctx, cfg, "reserve-seat-res-group", "reserve-seat-res", "payment", resCh)
 
 	req.CustomerId = strings.TrimPrefix(req.CustomerId, "customer:")
 
@@ -153,7 +153,6 @@ func (u *paymentUseCase) BuyTicket(pctx context.Context, cfg *config.Config, req
 	select {
 	case res := <-resCh:
 		if res != nil {
-			fmt.Println("res is", res)
 			stage1 = &payment.RollBackReserveSeatRes{
 				MovieId:     res.MovieId,
 				Seat_Number: res.Seat_Number,
@@ -161,38 +160,23 @@ func (u *paymentUseCase) BuyTicket(pctx context.Context, cfg *config.Config, req
 			}
 		}
 	case <-time.After(time.Second * 10):
+		u.paymentRepo.RollBackReserveSeat(pctx, cfg, &payment.RollBackReservedSeatReq{
+			MovieId: req.MovieId,
+			SeatNo:  req.SeatNo,
+		})
 		fmt.Println("Timeout waiting for rollback response")
 		return nil, errors.New("timeout waiting for rollback response")
 	}
 
 	if stage1.Error != "" {
+		fmt.Println("stage1.Error", stage1.Error)
 		u.paymentRepo.RollBackReserveSeat(pctx, cfg, &payment.RollBackReservedSeatReq{
 			MovieId: req.MovieId,
 			SeatNo:  req.SeatNo,
 		})
+
+		return nil, errors.New("error: failed to reserve seat")
 	}
-
-	// select {
-	// case res := <-resCh:
-	// 	if res != nil {
-	// 		fmt.Println("res is", res)
-	// 		stage1 = &payment.RollBackReserveSeatRes{
-	// 			MovieId:     res.MovieId,
-	// 			Seat_Number: res.Seat_Number,
-	// 			Error:       res.Error,
-	// 		}
-	// 	}
-	// case <-time.After(time.Second * 10):
-	// 	fmt.Println("Timeout waiting for rollback response")
-	// 	return nil, errors.New("timeout waiting for rollback response")
-	// }
-
-	// if stage1.Error != "" {
-	// 	u.paymentRepo.RollBackReserveSeat(pctx, cfg, &payment.RollBackReservedSeatReq{
-	// 		MovieId: req.MovieId,
-	// 		SeatNo:  req.SeatNo,
-	// 	})
-	// }
 
 	if err := u.CheckOutWithCreditCard(&payment.CheckOutWithCreditCard{Token: req.Token, Price: req.Price}); err != nil {
 		u.paymentRepo.RollBackReserveSeat(pctx, cfg, &payment.RollBackReservedSeatReq{
@@ -203,20 +187,23 @@ func (u *paymentUseCase) BuyTicket(pctx context.Context, cfg *config.Config, req
 	}
 
 	var png []byte
+	var fileUrl string
 	reqQrCode := utils.GenQRCode(int(req.Price))
 
 	png, err := qrcode.Encode(reqQrCode, qrcode.Medium, 256)
 	if err != nil {
 		log.Printf("Error: Failed to create qrcode file: %s", err.Error())
-		return nil, errors.New("error: failed to create qrcode file")
+		// return nil, errors.New("error: failed to create qrcode file")
+		fileUrl = `https://i1.sndcdn.com/artworks-x8zI2HVC2pnkK7F5-4xKLyA-t1080x1080.jpg`
 	}
 
 	destination := fmt.Sprintf(u.uploadPath + utils.RandFileName())
 
-	fileUrl, err := gcpfile.UploadFile(u.cfg, u.cl, pctx, destination, png)
+	fileUrl, err = gcpfile.UploadFile(u.cfg, u.cl, pctx, destination, png)
 	if err != nil {
 		log.Printf("Error: Upload file failed: %s", err.Error())
-		return nil, errors.New("error: failed to upload file")
+		fileUrl = `https://i1.sndcdn.com/artworks-x8zI2HVC2pnkK7F5-4xKLyA-t1080x1080.jpg`
+		// return nil, errors.New("error: failed to upload file")
 	}
 
 	orderNumber := utils.RandomString()
@@ -239,7 +226,7 @@ func (u *paymentUseCase) BuyTicket(pctx context.Context, cfg *config.Config, req
 		return nil, errors.New("error: failed to add ticket")
 	}
 
-	fmt.Println("fileUs", fileUrl)
+	// fmt.Println("fileUs", fileUrl)
 
 	return &payment.BuyticketRes{
 		TransactionId: orderNumber,

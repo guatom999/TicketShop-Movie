@@ -434,7 +434,7 @@ func (r *moviesrepository) ReserveSeatRes(pctx context.Context, cfg *config.Conf
 	ctx, cancel := context.WithTimeout(pctx, time.Second*20)
 	defer cancel()
 
-	conn := MovieProducer(ctx, cfg, "rollback")
+	conn := MovieProducer(ctx, cfg, "reserve-seat-res")
 
 	message := kafka.Message{
 		Key:   []byte("payment"),

@@ -228,7 +228,7 @@ func (u *moviesUseCase) ReserveSeat(pctx context.Context, req *movie.ReserveDeta
 	u.moviesRepo.ReserveSeatRes(pctx, u.cfg, &movie.ReserveSeatRes{
 		MovieId:     req.MovieId,
 		Seat_Number: req.SeatNo,
-		Error:       "",
+		Error:       "Just Test",
 	})
 
 	return nil
@@ -236,7 +236,7 @@ func (u *moviesUseCase) ReserveSeat(pctx context.Context, req *movie.ReserveDeta
 
 func (u *moviesUseCase) RollbackReserveSeat(pctx context.Context, req *movie.ReserveDetailReq) error {
 
-	fmt.Println("req movie Id is ::::::::::::::::::::::::::>", req.MovieId)
+	fmt.Println("req movie Id is ::::::::::::::::::::::::::>", req.MovieId, req.SeatNo)
 
 	result, err := u.moviesRepo.GetOneMovieAvaliable(pctx, req)
 	if err != nil {
