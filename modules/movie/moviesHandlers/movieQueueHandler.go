@@ -70,7 +70,6 @@ func (h *moviesQueueHandler) ReserveSeat() {
 		}
 
 		if string(message.Key) == "movie" {
-			fmt.Println("ReserveSeat Case -------------->")
 
 			if err := json.Unmarshal(message.Value, data); err != nil {
 				fmt.Printf("Error: Unmarshal error %s", err.Error())
@@ -101,7 +100,6 @@ func (h *moviesQueueHandler) RollBackSeat() {
 		}
 
 		if string(message.Key) == "movie" {
-			fmt.Println("RollBackSeat Case -------------->")
 			if err := json.Unmarshal(message.Value, data); err != nil {
 				fmt.Printf("Error: Unmarshal error %s", err.Error())
 			}

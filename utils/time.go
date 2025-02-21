@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"fmt"
 	"log"
 	"time"
 )
@@ -25,8 +24,6 @@ func ConvertStringDateToTime(stringDate string) time.Time {
 		log.Printf("Error parsing string: %s", err.Error())
 		return time.Now()
 	}
-
-	fmt.Println("time is", t)
 
 	return t
 }

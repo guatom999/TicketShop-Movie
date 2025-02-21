@@ -48,9 +48,6 @@ func (r *bookRepository) FindMovieIsAvaliable(title string) error {
 		return err
 	}
 
-	// fmt.Println("Response status code:", resp.StatusCode)
-	// fmt.Println("Response body:", string(body))
-
 	return nil
 
 }

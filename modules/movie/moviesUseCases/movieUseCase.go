@@ -223,20 +223,16 @@ func (u *moviesUseCase) ReserveSeat(pctx context.Context, req *movie.ReserveDeta
 		return err
 	}
 
-	fmt.Println("Wait for send Data to kafka")
-
 	u.moviesRepo.ReserveSeatRes(pctx, u.cfg, &movie.ReserveSeatRes{
 		MovieId:     req.MovieId,
 		Seat_Number: req.SeatNo,
-		Error:       "Just Test",
+		Error:       "",
 	})
 
 	return nil
 }
 
 func (u *moviesUseCase) RollbackReserveSeat(pctx context.Context, req *movie.ReserveDetailReq) error {
-
-	fmt.Println("req movie Id is ::::::::::::::::::::::::::>", req.MovieId, req.SeatNo)
 
 	result, err := u.moviesRepo.GetOneMovieAvaliable(pctx, req)
 	if err != nil {

@@ -113,13 +113,9 @@ func (u *paymentUseCase) BuyTicketConsumer(pctx context.Context, cfg *config.Con
 			}
 
 			if string(msg.Key) == key {
-				fmt.Println("BuyTicketConsumer ----------------------------->", string(msg.Key))
-
 				if err := json.Unmarshal(msg.Value, data); err != nil {
 					fmt.Printf("Error: Unmarshal error %s", err.Error())
 				}
-
-				// fmt.Println("data is", data)
 
 				resCh <- data
 				close(resCh)
@@ -141,6 +137,8 @@ func (u *paymentUseCase) BuyTicket(pctx context.Context, cfg *config.Config, req
 	go u.BuyTicketConsumer(pctx, cfg, "reserve-seat-res-group", "reserve-seat-res", "payment", resCh)
 
 	req.CustomerId = strings.TrimPrefix(req.CustomerId, "customer:")
+
+	fmt.Println("req.PosterImage is", req.PosterImage)
 
 	if err := u.paymentRepo.ReserveSeat(pctx, cfg, &payment.ReserveSeatReq{
 		MovieName: req.MovieName,
@@ -225,8 +223,6 @@ func (u *paymentUseCase) BuyTicket(pctx context.Context, cfg *config.Config, req
 		fmt.Printf("Error: Failed to add ticket %s", err.Error())
 		return nil, errors.New("error: failed to add ticket")
 	}
-
-	// fmt.Println("fileUs", fileUrl)
 
 	return &payment.BuyticketRes{
 		TransactionId: orderNumber,

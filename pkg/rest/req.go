@@ -135,7 +135,6 @@ func Post(url string, value any) error {
 	}
 
 	fmt.Println("Response Status:", resp.Status)
-	fmt.Println("Response Body:", string(respBody))
 
 	return nil
 }

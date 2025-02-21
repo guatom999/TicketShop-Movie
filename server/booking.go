@@ -48,10 +48,6 @@ func bookingConsumer(cfg *config.Config) {
 	fmt.Println("Reader is ", reader.SetOffset(6))
 
 	for {
-
-		// fmt.Printf("First Offset is %d lastOffset is %d ", fisrtOffset, lastOffset)
-		// fmt.Println("Offset is", offset)
-		// message, err := conn.ReadMessage(10e3)
 		message, err := reader.ReadMessage(context.Background())
 		if err != nil {
 			break
