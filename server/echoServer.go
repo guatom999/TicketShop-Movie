@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -125,7 +124,7 @@ func (s *server) Start(pctx context.Context) {
 		s.CustomerModules(authMiddleware)
 	}
 
-	if err := s.app.Start(fmt.Sprintf(":%d", s.cfg.App.Port)); err != nil && err != http.ErrServerClosed {
+	if err := s.app.Start(s.cfg.App.Port); err != nil && err != http.ErrServerClosed {
 		log.Fatalf("Failed to shutdown:%v", err)
 
 	}
