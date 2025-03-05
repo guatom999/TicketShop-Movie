@@ -6,27 +6,23 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"mime/multipart"
 	"strings"
 	"time"
 
-	"cloud.google.com/go/storage"
 	"github.com/guatom999/TicketShop-Movie/config"
 	"github.com/guatom999/TicketShop-Movie/modules/payment"
 	"github.com/guatom999/TicketShop-Movie/modules/payment/paymentRepositories"
-	gcpfile "github.com/guatom999/TicketShop-Movie/pkg/file"
 	"github.com/guatom999/TicketShop-Movie/pkg/queue"
 	"github.com/guatom999/TicketShop-Movie/utils"
 	"github.com/omise/omise-go"
 	"github.com/omise/omise-go/operations"
-	"github.com/skip2/go-qrcode"
 )
 
 type (
 	PaymentUseCaseService interface {
 		BuyTicket(pctx context.Context, cfg *config.Config, req *payment.MovieBuyReq) (*payment.BuyticketRes, error)
 		CheckOutWithCreditCard(req *payment.CheckOutWithCreditCard) error
-		UploadFileTest(file multipart.File, object string) error
+		// UploadFileTest(file multipart.File, object string) error
 		// BuyTicketConsumer(pctx context.Context, topic string, resCh chan<- *payment.RollBackReserveSeatRes)
 	}
 
@@ -36,7 +32,7 @@ type (
 		opnClient   *omise.Client
 		bucketName  string
 		uploadPath  string
-		cl          *storage.Client
+		// cl          *storage.Client
 	}
 
 	UploadResponse struct {
@@ -45,7 +41,12 @@ type (
 	}
 )
 
-func NewPaymentUseCase(paymentRepo paymentRepositories.PaymentRepositoryService, cfg *config.Config, opnClient *omise.Client, cli *storage.Client) PaymentUseCaseService {
+func NewPaymentUseCase(
+	paymentRepo paymentRepositories.PaymentRepositoryService,
+	cfg *config.Config,
+	opnClient *omise.Client,
+	// cli *storage.Client, close client for a while
+) PaymentUseCaseService {
 
 	return &paymentUseCase{
 		paymentRepo: paymentRepo,
@@ -53,7 +54,7 @@ func NewPaymentUseCase(paymentRepo paymentRepositories.PaymentRepositoryService,
 		opnClient:   opnClient,
 		bucketName:  "ticket-shop-bucket",
 		uploadPath:  "ticket-image/",
-		cl:          cli,
+		// cl:          cli,
 	}
 }
 
@@ -93,7 +94,7 @@ func (u *paymentUseCase) CheckOutWithCreditCard(req *payment.CheckOutWithCreditC
 // }
 
 func (u *paymentUseCase) BuyTicketConsumer(pctx context.Context, cfg *config.Config, groupId string, topic string, key string, resCh chan<- *payment.RollBackReserveSeatRes) {
-	reader := queue.KafkaReader(topic, groupId)
+	reader := queue.KafkaReader(u.cfg, topic, groupId)
 	defer reader.Close()
 
 	data := new(payment.RollBackReserveSeatRes)
@@ -113,6 +114,7 @@ func (u *paymentUseCase) BuyTicketConsumer(pctx context.Context, cfg *config.Con
 			}
 
 			if string(msg.Key) == key {
+				fmt.Println("============================>")
 				if err := json.Unmarshal(msg.Value, data); err != nil {
 					fmt.Printf("Error: Unmarshal error %s", err.Error())
 				}
@@ -184,25 +186,26 @@ func (u *paymentUseCase) BuyTicket(pctx context.Context, cfg *config.Config, req
 		return nil, err
 	}
 
-	var png []byte
-	var fileUrl string
-	reqQrCode := utils.GenQRCode(int(req.Price))
+	// var png []byte
+	// var fileUrl string
+	// reqQrCode := utils.GenQRCode(int(req.Price))
 
-	png, err := qrcode.Encode(reqQrCode, qrcode.Medium, 256)
-	if err != nil {
-		log.Printf("Error: Failed to create qrcode file: %s", err.Error())
-		// return nil, errors.New("error: failed to create qrcode file")
-		fileUrl = `https://i1.sndcdn.com/artworks-x8zI2HVC2pnkK7F5-4xKLyA-t1080x1080.jpg`
-	}
+	// png, err := qrcode.Encode(reqQrCode, qrcode.Medium, 256)
+	// if err != nil {
+	// 	log.Printf("Error: Failed to create qrcode file: %s", err.Error())
+	// 	// return nil, errors.New("error: failed to create qrcode file")
+	// 	fileUrl = `https://i1.sndcdn.com/artworks-x8zI2HVC2pnkK7F5-4xKLyA-t1080x1080.jpg`
+	// }
 
-	destination := fmt.Sprintf(u.uploadPath + utils.RandFileName())
+	// destination := fmt.Sprintf(u.uploadPath + utils.RandFileName())
 
-	fileUrl, err = gcpfile.UploadFile(u.cfg, u.cl, pctx, destination, png)
-	if err != nil {
-		log.Printf("Error: Upload file failed: %s", err.Error())
-		fileUrl = `https://i1.sndcdn.com/artworks-x8zI2HVC2pnkK7F5-4xKLyA-t1080x1080.jpg`
-		// return nil, errors.New("error: failed to upload file")
-	}
+	// fileUrl, err = gcpfile.UploadFile(u.cfg, u.cl, pctx, destination, png)
+	// if err != nil {
+	// 	log.Printf("Error: Upload file failed: %s", err.Error())
+	// 	fileUrl = `https://i1.sndcdn.com/artworks-x8zI2HVC2pnkK7F5-4xKLyA-t1080x1080.jpg`
+	// 	// return nil, errors.New("error: failed to upload file")
+	// }
+	fileUrl := string("https://storage.googleapis.com/ticket-shop-bucket/ticket-image/2409ec_1739993038586")
 
 	orderNumber := utils.RandomString()
 
@@ -230,34 +233,34 @@ func (u *paymentUseCase) BuyTicket(pctx context.Context, cfg *config.Config, req
 	}, nil
 }
 
-func (c *paymentUseCase) UploadFileTest(file multipart.File, object string) error {
-	ctx := context.Background()
+// func (c *paymentUseCase) UploadFileTest(file multipart.File, object string) error {
+// 	ctx := context.Background()
 
-	ctx, cancel := context.WithTimeout(ctx, time.Second*50)
-	defer cancel()
+// 	ctx, cancel := context.WithTimeout(ctx, time.Second*50)
+// 	defer cancel()
 
-	var png []byte
-	png, err := qrcode.Encode("https://photos.app.goo.gl/pkN35vFQhc6DRXqQ6", qrcode.Medium, 256)
-	if err != nil {
-		log.Printf("Error: Failed to create qrcode file:%s", err.Error())
-		return errors.New("error:failed to create qrcode file")
-	}
+// 	var png []byte
+// 	png, err := qrcode.Encode("https://photos.app.goo.gl/pkN35vFQhc6DRXqQ6", qrcode.Medium, 256)
+// 	if err != nil {
+// 		log.Printf("Error: Failed to create qrcode file:%s", err.Error())
+// 		return errors.New("error:failed to create qrcode file")
+// 	}
 
-	// buff := bytes.NewBuffer(png)
+// 	// buff := bytes.NewBuffer(png)
 
-	gcpfile.UploadFile(c.cfg, c.cl, ctx, c.uploadPath+object, png)
+// 	gcpfile.UploadFile(c.cfg, c.cl, ctx, c.uploadPath+object, png)
 
-	// Upload an object with storage.Writer.
+// 	// Upload an object with storage.Writer.
 
-	// wc := c.cl.Bucket(c.bucketName).Object(c.uploadPath + object).NewWriter(ctx)
-	// if _, err := io.Copy(wc, buff); err != nil {
-	// 	fmt.Printf("Error:Failed to Upload File io.Copy: %s", err.Error())
-	// 	return fmt.Errorf("io.Copy: %v", err)
-	// }
-	// if err := wc.Close(); err != nil {
-	// 	fmt.Printf("Error:Failed to Upload File wc.Close: %s", err.Error())
-	// 	return fmt.Errorf("Writer.Close: %v", err)
-	// }
+// 	// wc := c.cl.Bucket(c.bucketName).Object(c.uploadPath + object).NewWriter(ctx)
+// 	// if _, err := io.Copy(wc, buff); err != nil {
+// 	// 	fmt.Printf("Error:Failed to Upload File io.Copy: %s", err.Error())
+// 	// 	return fmt.Errorf("io.Copy: %v", err)
+// 	// }
+// 	// if err := wc.Close(); err != nil {
+// 	// 	fmt.Printf("Error:Failed to Upload File wc.Close: %s", err.Error())
+// 	// 	return fmt.Errorf("Writer.Close: %v", err)
+// 	// }
 
-	return nil
-}
+// 	return nil
+// }

@@ -1,10 +1,6 @@
 package server
 
 import (
-	"context"
-	"log"
-
-	"cloud.google.com/go/storage"
 	paymentHandler "github.com/guatom999/TicketShop-Movie/modules/payment/paymentHandlers"
 	"github.com/guatom999/TicketShop-Movie/modules/payment/paymentRepositories"
 	"github.com/guatom999/TicketShop-Movie/modules/payment/paymentUseCases"
@@ -12,13 +8,14 @@ import (
 
 func (s *server) PaymentModule() {
 
-	client, err := storage.NewClient(context.Background())
-	if err != nil {
-		log.Fatalf("Failed to create client: %v", err)
-	}
+	// client, err := storage.NewClient(context.Background())
+	// if err != nil {
+	// 	log.Fatalf("Failed to create client: %v", err)
+	// }
 
 	paymentRepo := paymentRepositories.NewPaymentRepository(s.db)
-	paymentUseCase := paymentUseCases.NewPaymentUseCase(paymentRepo, s.cfg, s.omise, client)
+	// paymentUseCase := paymentUseCases.NewPaymentUseCase(paymentRepo, s.cfg, s.omise, client)
+	paymentUseCase := paymentUseCases.NewPaymentUseCase(paymentRepo, s.cfg, s.omise)
 	paymentHandler := paymentHandler.NewPaymentHanlder(s.cfg, paymentUseCase)
 
 	// ctx := context.Background()

@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"log"
+	"path/filepath"
 
 	"github.com/spf13/viper"
 )
@@ -21,7 +22,7 @@ type (
 
 	App struct {
 		Name string
-		Port int
+		Port string
 	}
 
 	Db struct {
@@ -37,8 +38,9 @@ type (
 	}
 
 	Kafka struct {
-		Url   string
-		Topic string
+		Url       string
+		ApiKey    string
+		SecretKey string
 	}
 
 	Omise struct {
@@ -65,9 +67,13 @@ type (
 
 func GetConfig(path string) Config {
 
-	viper.SetConfigName(fmt.Sprintf(".env.%s", path))
+	dir, file := filepath.Split(path)
+	fmt.Println("dir and file is", dir, file)
+	// fileName := strings.TrimPrefix(file, ".env.")
+
+	viper.SetConfigName(file)
 	viper.SetConfigType("env")
-	viper.AddConfigPath("./env")
+	viper.AddConfigPath(dir)
 	viper.AutomaticEnv()
 
 	err := viper.ReadInConfig()
@@ -79,7 +85,7 @@ func GetConfig(path string) Config {
 	return Config{
 		App: App{
 			Name: viper.GetString("APP_NAME"),
-			Port: viper.GetInt("APP_PORT"),
+			Port: viper.GetString("APP_PORT"),
 		},
 		Db: Db{
 			Url: viper.GetString("DB_URL"),
@@ -92,8 +98,9 @@ func GetConfig(path string) Config {
 			RefreshDuration:  int64(viper.GetInt("JWT_REFRESH_DURATION")),
 		},
 		Kafka: Kafka{
-			Url:   viper.GetString("KAFKA_URL"),
-			Topic: viper.GetString("KAFKA_API_KEY"),
+			Url:       viper.GetString("KAFKA_URL"),
+			ApiKey:    viper.GetString("KAFKA_API_KEY"),
+			SecretKey: viper.GetString("KAFKA_SECRET_KEY"),
 		},
 		Omise: Omise{
 			PublicKey: viper.GetString("OMISE_PUBLIC_KEY"),
@@ -130,7 +137,7 @@ func GetMigrateConfig(path string) Config {
 	return Config{
 		App: App{
 			Name: viper.GetString("APP_NAMe"),
-			Port: viper.GetInt("APP_PORT"),
+			Port: viper.GetString("APP_PORT"),
 		},
 		Db: Db{
 			Url: viper.GetString("DB_URL"),
@@ -143,8 +150,9 @@ func GetMigrateConfig(path string) Config {
 			RefreshDuration:  int64(viper.GetInt("JWT_REFRESH_DURATION")),
 		},
 		Kafka: Kafka{
-			Url:   viper.GetString("KAFKA_URL"),
-			Topic: viper.GetString("KAFKA_API_KEY"),
+			Url:       viper.GetString("KAFKA_URL"),
+			ApiKey:    viper.GetString("KAFKA_API_KEY"),
+			SecretKey: viper.GetString("KAFKA_SECRET_KEY"),
 		},
 
 		Omise: Omise{

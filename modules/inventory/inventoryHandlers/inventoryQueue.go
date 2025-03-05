@@ -36,7 +36,7 @@ func (h *inventoryQueueHanlder) AddCustomerTransaction() {
 
 	data := new(inventory.AddCustomerTicketReq)
 
-	reader := queue.KafkaReader("add-ticket", "inventory-group")
+	reader := queue.KafkaReader(h.cfg, "add-ticket", "inventory-group")
 	defer reader.Close()
 
 	for {

@@ -2,17 +2,28 @@ package queue
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"log"
 	"time"
 
 	"github.com/guatom999/TicketShop-Movie/config"
 	"github.com/segmentio/kafka-go"
+	"github.com/segmentio/kafka-go/sasl/plain"
 )
 
 func KafkaConn(cfg *config.Config, topic string) *kafka.Conn {
 
-	conn, err := kafka.DialLeader(context.Background(), "tcp", cfg.Kafka.Url, topic, 0)
+	dialer := &kafka.Dialer{
+		Timeout: 10 * time.Second,
+		TLS:     &tls.Config{}, // Enable TLS
+		SASLMechanism: plain.Mechanism{
+			Username: cfg.Kafka.ApiKey,
+			Password: cfg.Kafka.SecretKey,
+		},
+	}
+
+	conn, err := dialer.DialLeader(context.Background(), "tcp", cfg.Kafka.Url, topic, 0)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -21,7 +32,16 @@ func KafkaConn(cfg *config.Config, topic string) *kafka.Conn {
 }
 
 func PushMessageToQueue(cfg *config.Config, key, topic string, message ...kafka.Message) {
-	conn, err := kafka.DialLeader(context.Background(), "tcp", cfg.Kafka.Url, topic, 0)
+	dialer := &kafka.Dialer{
+		Timeout: 10 * time.Second,
+		TLS:     &tls.Config{}, // Enable TLS
+		SASLMechanism: plain.Mechanism{
+			Username: cfg.Kafka.ApiKey,
+			Password: cfg.Kafka.SecretKey,
+		},
+	}
+
+	conn, err := dialer.DialLeader(context.Background(), "tcp", cfg.Kafka.Url, topic, 0)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -38,13 +58,22 @@ func PushMessageToQueue(cfg *config.Config, key, topic string, message ...kafka.
 
 }
 
-func KafkaReader(topic, groupID string) *kafka.Reader {
+func KafkaReader(cfg *config.Config, topic, groupID string) *kafka.Reader {
+	dialer := &kafka.Dialer{
+		Timeout: 10 * time.Second,
+		TLS:     &tls.Config{}, // Enable TLS
+		SASLMechanism: plain.Mechanism{
+			Username: cfg.Kafka.ApiKey,
+			Password: cfg.Kafka.SecretKey,
+		},
+	}
 
 	readerConfig := kafka.ReaderConfig{
-		Brokers:     []string{"localhost:9092"},
+		Brokers:     []string{cfg.Kafka.Url},
 		GroupID:     groupID,
 		Topic:       topic,
 		StartOffset: kafka.LastOffset,
+		Dialer:      dialer,
 	}
 
 	reader := kafka.NewReader(readerConfig)

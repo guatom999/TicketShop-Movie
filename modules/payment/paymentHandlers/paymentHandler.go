@@ -50,19 +50,19 @@ func (h *paymentHandler) BuyTicket(c echo.Context) error {
 
 func (h *paymentHandler) TestUpload(c echo.Context) error {
 
-	file, err := c.FormFile("image")
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, err.Error())
-	}
+	// file, err := c.FormFile("image")
+	// if err != nil {
+	// 	return c.JSON(http.StatusBadRequest, err.Error())
+	// }
 
-	blobfile, err := file.Open()
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, err.Error())
-	}
+	// blobfile, err := file.Open()
+	// if err != nil {
+	// 	return c.JSON(http.StatusBadRequest, err.Error())
+	// }
 
-	if err := h.paymentUseCase.UploadFileTest(blobfile, ""); err != nil {
-		return c.JSON(http.StatusInternalServerError, err)
-	}
+	// if err := h.paymentUseCase.UploadFileTest(blobfile, ""); err != nil {
+	// 	return c.JSON(http.StatusInternalServerError, err)
+	// }
 
 	return c.JSON(http.StatusOK, "test")
 }

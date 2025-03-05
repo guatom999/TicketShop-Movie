@@ -58,7 +58,9 @@ func (h *moviesQueueHandler) ReserveSeat() {
 
 	data := new(movie.ReserveSeatReqTest)
 
-	reader := queue.KafkaReader("reserve-seat", "reserve-seat-req-group")
+	fmt.Println("h.cfg", h.cfg.Kafka.ApiKey)
+
+	reader := queue.KafkaReader(h.cfg, "reserve-seat", "reserve-seat-req-group")
 	defer reader.Close()
 
 	for {
@@ -89,7 +91,7 @@ func (h *moviesQueueHandler) RollBackSeat() {
 
 	data := new(movie.RollBackReservedSeatReq)
 
-	reader := queue.KafkaReader("rollback", "roll-back-seat-req-group")
+	reader := queue.KafkaReader(h.cfg, "rollback", "roll-back-seat-req-group")
 	defer reader.Close()
 
 	for {
