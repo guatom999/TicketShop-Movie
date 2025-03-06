@@ -40,7 +40,7 @@ func (u *middlewareUseCase) JwtAuthorize(c echo.Context, accessToken string) (ec
 		return nil, err
 	}
 
-	if err := u.middlewareRepository.AccessTokenSearch(ctx, accessToken); err != nil {
+	if err := u.middlewareRepository.AccessTokenSearch(ctx, u.cfg, accessToken); err != nil {
 		return nil, err
 	}
 

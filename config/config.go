@@ -12,6 +12,7 @@ type (
 	Config struct {
 		App    App
 		Db     Db
+		AppUrl AppUrl
 		Jwt    Jwt
 		Kafka  Kafka
 		Omise  Omise
@@ -28,7 +29,13 @@ type (
 	Db struct {
 		Url string
 	}
-
+	AppUrl struct {
+		CustomerUrl  string
+		InventoryUrl string
+		MovieUrl     string
+		PaymentUrl   string
+		TicketUrl    string
+	}
 	Jwt struct {
 		AccessSecretKey  string
 		RefreshSecretKey string
@@ -89,6 +96,13 @@ func GetConfig(path string) Config {
 		},
 		Db: Db{
 			Url: viper.GetString("DB_URL"),
+		},
+		AppUrl: AppUrl{
+			CustomerUrl:  viper.GetString("TICKET_CUSTOMER_URL"),
+			InventoryUrl: viper.GetString("TICKET_INVENTORY_URL"),
+			MovieUrl:     viper.GetString("TICKET_MOVIE_URL"),
+			PaymentUrl:   viper.GetString("TICKET_PAYMENT_URL"),
+			TicketUrl:    viper.GetString("TICKET_TICKET_URL"),
 		},
 		Jwt: Jwt{
 			AccessSecretKey:  viper.GetString("JWT_ACCESS_SECRET_KEY"),
