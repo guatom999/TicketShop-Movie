@@ -1,4 +1,4 @@
-environments=("movie" "payment" "inventory" "ticket" "customer")
+environments=("./env/dev/.env.movie" "./env/dev/.env.payment" "./env/dev/.env.inventory" "./env/dev/.env.ticket" "./env/dev/.env.customer")
 
 # Loop through environments and run the command
 for env in "${environments[@]}"; do

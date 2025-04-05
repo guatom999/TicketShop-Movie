@@ -292,6 +292,7 @@ func (r *moviesrepository) FindComingSoonMovie(pctx context.Context, filter any)
 	value, err := r.redis.Get(ctx, "comingsoon_list").Result()
 	if err == nil {
 		if err = json.Unmarshal([]byte(value), &results); err == nil {
+			fmt.Printf("Error: get comingsoon movies from redis failed :%s", err.Error())
 			return results, nil
 		}
 	}
@@ -326,6 +327,7 @@ func (r *moviesrepository) FindComingSoonMovie(pctx context.Context, filter any)
 
 	_, err = r.redis.Set(ctx, "comingsoon_list", string(data), time.Second*30).Result()
 	if err != nil {
+		fmt.Println("Error: set redis failed")
 		return make([]*movie.MovieData, 0), errors.New("error: set redis failed")
 	}
 

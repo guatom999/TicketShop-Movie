@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 name: "tikcer-movie-db"
 
@@ -6,7 +6,7 @@ name: "tikcer-movie-db"
 
 services:
   movie-db:
-    image: mongo
+    image: mongo:4.4
     container_name: movie-db
     ports:
       - 27017:27017
@@ -14,7 +14,7 @@ services:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: 123456
   booking-db:
-    image: mongo
+    image: mongo:4.4
     container_name: booking-db
     ports:
       - 27018:27017
@@ -22,7 +22,7 @@ services:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: 123456
   customer-db:
-    image: mongo
+    image: mongo:4.4
     container_name: customer-db
     ports:
       - 27019:27017
@@ -30,15 +30,15 @@ services:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: 123456
   customer-inventory-db:
-      image: mongo
-      container_name: customer-inventory-db
-      ports:
-        - 27020:27017
-      environment:
-        MONGO_INITDB_ROOT_USERNAME: root
-        MONGO_INITDB_ROOT_PASSWORD: 123456
+    image: mongo:4.4
+    container_name: customer-inventory-db
+    ports:
+      - 27020:27017
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: 123456
   ticket-db:
-    image: mongo
+    image: mongo:4.4
     container_name: ticket-db
     ports:
       - 27021:27017
@@ -46,14 +46,13 @@ services:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: 123456
   payment-ticket-db:
-    image: mongo
+    image: mongo:4.4
     container_name: payment-ticket-db
     ports:
       - 27022:27017
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: 123456
-
 # services:
 #   postgres:
 #     image: postgres:latest
@@ -67,14 +66,14 @@ services:
 #     ports:
 #       - "5432:5432"
 #     restart: unless-stopped
-  
+
 #   # Dont Use PGadmin Now
-  # pgadmin:
-  #   image: dpage/pgadmin4
-  #   container_name: pgadmin4
-  #   restart: unless-stopped
-  #   ports:
-  #     - "5051:80"
-  #   environment:
-  #     PGADMIN_DEFAULT_EMAIL: root
-  #     PGADMIN_DEFAULT_PASSWORD: 123456
+# pgadmin:
+#   image: dpage/pgadmin4
+#   container_name: pgadmin4
+#   restart: unless-stopped
+#   ports:
+#     - "5051:80"
+#   environment:
+#     PGADMIN_DEFAULT_EMAIL: root
+#     PGADMIN_DEFAULT_PASSWORD: 123456
