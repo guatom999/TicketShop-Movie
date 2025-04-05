@@ -19,7 +19,7 @@ func Request(url string) (string, error) {
 
 	resp, err := client.Get(url)
 	if err != nil {
-		log.Printf("Error sending GET request: %s", err.Error)
+		log.Printf("Error sending GET request: %s", err.Error())
 		return "", err
 	}
 	defer resp.Body.Close()
