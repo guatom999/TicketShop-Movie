@@ -245,6 +245,7 @@ func (r *moviesrepository) FindAllMovie(pctx context.Context, filter any) ([]*mo
 	}
 
 	cursor, err := col.Find(ctx, filter)
+	// cursor, err := col.Find(ctx, bson.M{})
 	if err != nil {
 		log.Printf("Error: Find All Movie Failed: %s", err.Error())
 		return make([]*movie.MovieData, 0), errors.New("error: find all item failed")
@@ -273,7 +274,9 @@ func (r *moviesrepository) FindAllMovie(pctx context.Context, filter any) ([]*mo
 
 	_, err = r.redis.Set(ctx, "movies_list", string(data), time.Second*30).Result()
 	if err != nil {
-		return make([]*movie.MovieData, 0), errors.New("error: set redis failed")
+		log.Printf("Error: set redis failed :%s", err.Error())
+		// return make([]*movie.MovieData, 0), errors.New("error: set redis failed")
+		return results, nil
 	}
 
 	return results, nil
@@ -327,8 +330,9 @@ func (r *moviesrepository) FindComingSoonMovie(pctx context.Context, filter any)
 
 	_, err = r.redis.Set(ctx, "comingsoon_list", string(data), time.Second*30).Result()
 	if err != nil {
-		fmt.Println("Error: set redis failed")
-		return make([]*movie.MovieData, 0), errors.New("error: set redis failed")
+		fmt.Println("Error: set redis failed", err.Error())
+		// return make([]*movie.MovieData, 0), errors.New("error: set redis failed")
+		return results, nil
 	}
 
 	return results, nil

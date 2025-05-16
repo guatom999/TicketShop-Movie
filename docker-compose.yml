@@ -1,0 +1,81 @@
+version: "3.8"
+
+services:
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    container_name: nginx-proxy
+    restart: always
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+    ports:
+      - "80:80"
+    depends_on:
+      - movie
+      - payment
+      - inventory
+      - ticket
+      - customer
+    networks:
+      - app-network
+
+  movie:
+    # build: .
+    image: badzboss/ticketshop-movie:v1.0.2
+    container_name: movie-service
+    volumes:
+      # - ./envs/ticket-shop/.env.movie:/etc/env/.env
+      - ./env/dev/.env.movie:/etc/env/.env
+    ports:
+      - "8090:8090"
+    networks:
+      - app-network
+
+  payment:
+    # build: .
+    image: badzboss/ticketshop-payment:v1.0.1
+    container_name: payment-service
+    volumes:
+      - ./env/dev/.env.payment:/etc/env/.env
+    ports:
+      - "8103:8103"
+    networks:
+      - app-network
+
+  inventory:
+    # build: .
+    image: badzboss/ticketshop-inventory:v1.0.1
+    container_name: inventory-service
+    volumes:
+      - ./env/dev/.env.inventory:/etc/env/.env
+    ports:
+      - "8101:8101"
+    networks:
+      - app-network
+
+  ticket:
+    # build: .
+    image: badzboss/ticketshop-ticket:v1.0.1
+    container_name: ticket-service
+    volumes:
+      - ./env/dev/.env.ticket:/etc/env/.env
+    ports:
+      - "8102:8102"
+    networks:
+      - app-network
+
+  customer:
+    # build: .
+    image: badzboss/ticketshop-customer:v1.0.1
+    container_name: customer-service
+    volumes:
+      - ./env/dev/.env.customer:/etc/env/.env
+    ports:
+      - "8100:8100"
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
