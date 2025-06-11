@@ -15,6 +15,8 @@ func (s *server) TicketModule() {
 
 	ticketRouter.POST("/add", ticketHandler.AddCustomerTicket)
 
+	ticketRouter.GET("/health", ticketHandler.HealthCheck)
+
 	ticketRouter.GET("/:customer_id", ticketHandler.FindCustomerTicket)
 
 }

@@ -14,6 +14,8 @@ func (s *server) InventoryModule() {
 
 	ticketRouter := s.app.Group("/inventory")
 
+	ticketRouter.GET("/health", inventoryHandler.HealthCheck)
+
 	go inventoryQueueHandler.AddCustomerTransaction()
 
 	// tikcetRouter.POST("/add", inventoryHandler.FindCustomerTicket)

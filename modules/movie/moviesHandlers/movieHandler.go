@@ -18,6 +18,7 @@ type (
 		TestReq(c echo.Context) error
 		FindMovieShowTime(c echo.Context) error
 		ReserveSeat(c echo.Context) error
+		HealthCheck(c echo.Context) error
 	}
 
 	moviesHandler struct {
@@ -27,6 +28,10 @@ type (
 
 func NewMoviesHandler(moviesUseCase moviesUseCases.MoviesUseCaseService) MoviesHandlerService {
 	return &moviesHandler{moviesUseCase: moviesUseCase}
+}
+
+func (h *moviesHandler) HealthCheck(c echo.Context) error {
+	return c.JSON(http.StatusOK, "status ok")
 }
 
 func (h *moviesHandler) AddOneMovie(c echo.Context) error {

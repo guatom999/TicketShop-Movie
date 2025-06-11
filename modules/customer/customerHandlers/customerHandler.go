@@ -24,6 +24,7 @@ type (
 		Register(c echo.Context) error
 		FindAccessToken(c echo.Context) error
 		ForgotPassword(c echo.Context) error
+		HealthCheck(c echo.Context) error
 	}
 
 	customerHandler struct {
@@ -37,6 +38,10 @@ func NewCustomerHandler(customerUseCase customerUseCases.CustomerUseCaseService,
 		customerUseCase: customerUseCase,
 		cfg:             cfg,
 	}
+}
+
+func (h *customerHandler) HealthCheck(c echo.Context) error {
+	return c.JSON(http.StatusOK, "status ok")
 }
 
 func (h *customerHandler) GetCustomerProfile(c echo.Context) error {

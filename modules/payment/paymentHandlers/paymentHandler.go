@@ -14,6 +14,7 @@ type (
 	PaymentHandlerService interface {
 		BuyTicket(c echo.Context) error
 		TestUpload(c echo.Context) error
+		HealthCheck(c echo.Context) error
 		// CheckOutWithCreditCard(c echo.Context) error
 	}
 
@@ -28,6 +29,10 @@ func NewPaymentHanlder(cfg *config.Config, paymentUseCase paymentUseCases.Paymen
 		cfg:            cfg,
 		paymentUseCase: paymentUseCase,
 	}
+}
+
+func (h *paymentHandler) HealthCheck(c echo.Context) error {
+	return c.JSON(http.StatusOK, "status ok")
 }
 
 func (h *paymentHandler) BuyTicket(c echo.Context) error {

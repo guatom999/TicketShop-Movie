@@ -17,6 +17,7 @@ func (s *server) CustomerModules(
 	customerRouter := s.app.Group("/user")
 
 	// customerRouter.GET("/test-token" , )
+	customerRouter.GET("/health", customerHandler.HealthCheck)
 
 	customerRouter.GET("/testjwt", customerHandler.TestJwtAuthorize, authMiddleware.JwtAuthorize)
 	// customerRouter.GET("/testjwt", customerHandler.TestJwtAuthorize, m.JwtAuthorize)

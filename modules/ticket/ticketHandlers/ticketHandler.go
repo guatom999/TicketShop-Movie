@@ -14,6 +14,7 @@ type (
 	TicketHandlerService interface {
 		AddCustomerTicket(c echo.Context) error
 		FindCustomerTicket(c echo.Context) error
+		HealthCheck(c echo.Context) error
 	}
 
 	ticketHandler struct {
@@ -23,6 +24,10 @@ type (
 
 func NewTicketHandler(ticketUseCase ticketUseCases.TicketUseCaseService) TicketHandlerService {
 	return &ticketHandler{ticketUseCase: ticketUseCase}
+}
+
+func (h *ticketHandler) HealthCheck(c echo.Context) error {
+	return c.JSON(http.StatusOK, "status ok")
 }
 
 func (h *ticketHandler) AddCustomerTicket(c echo.Context) error {

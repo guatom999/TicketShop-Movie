@@ -12,6 +12,7 @@ type (
 	InventoryHandlerService interface {
 		GetCustomerTicket(c echo.Context) error
 		FindLastCustomerTicket(c echo.Context) error
+		HealthCheck(c echo.Context) error
 	}
 
 	inventoryHandler struct {
@@ -21,6 +22,10 @@ type (
 
 func NewInventoryHandler(inventoryUseCase inventoryUseCases.InventoryUseCaseService) InventoryHandlerService {
 	return &inventoryHandler{inventoryUseCase: inventoryUseCase}
+}
+
+func (h *inventoryHandler) HealthCheck(c echo.Context) error {
+	return c.JSON(http.StatusOK, "status ok")
 }
 
 func (h *inventoryHandler) GetCustomerTicket(c echo.Context) error {

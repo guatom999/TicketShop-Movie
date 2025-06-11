@@ -17,6 +17,8 @@ func (s *server) MovieModule() {
 
 	movieRouter := s.app.Group("/movie")
 
+	movieRouter.GET("/health", movieHandler.HealthCheck)
+
 	movieRouter.POST("/addmovie", movieHandler.AddOneMovie)
 	movieRouter.GET("/getallmovie", movieHandler.GetAllMovie)
 	movieRouter.GET("/comingsoonmovie", movieHandler.GetAllComingSoonMovie)

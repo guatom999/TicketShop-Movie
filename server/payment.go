@@ -28,6 +28,7 @@ func (s *server) PaymentModule() {
 
 	router := s.app.Group("/payment")
 
+	router.GET("/health", paymentHandler.HealthCheck)
 	router.POST("/buyticket", paymentHandler.BuyTicket)
 	router.POST("/testupload", paymentHandler.TestUpload)
 	// router.POST("/checkoutwithcreditcard", paymentHandler.CheckOutWithCreditCard)
