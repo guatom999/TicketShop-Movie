@@ -295,22 +295,22 @@ func (r *moviesrepository) FindComingSoonMovie(pctx context.Context, filter any)
 	value, err := r.redis.Get(ctx, "comingsoon_list").Result()
 	if err == nil {
 		if err = json.Unmarshal([]byte(value), &results); err == nil {
-			fmt.Printf("Error: get comingsoon movies from redis failed :%s", err.Error())
-			return results, nil
+			fmt.Printf("Error: get comingsoon movies from redis failed :%s", err)
+			return results, errors.New("error: find comign soon movies failed")
 		}
 	}
 
 	cursor, err := col.Find(ctx, filter)
 	if err != nil {
 		log.Printf("Error: Find Coming SoonMovie Failed: %s", err.Error())
-		return make([]*movie.MovieData, 0), nil
+		return make([]*movie.MovieData, 0), errors.New("error: find comign soon movies failed")
 	}
 
 	for cursor.Next(ctx) {
 		result := new(movie.Movie)
 		if err := cursor.Decode(result); err != nil {
 			log.Println("Error: Find All Movie Failed:", err.Error())
-			return make([]*movie.MovieData, 0), errors.New("error: find all item failed")
+			return make([]*movie.MovieData, 0), errors.New("error: find comign soon movies failed")
 		}
 
 		results = append(results, &movie.MovieData{
@@ -332,7 +332,7 @@ func (r *moviesrepository) FindComingSoonMovie(pctx context.Context, filter any)
 	if err != nil {
 		fmt.Println("Error: set redis failed", err.Error())
 		// return make([]*movie.MovieData, 0), errors.New("error: set redis failed")
-		return results, nil
+		return results, errors.New("error: find comign soon movies failed")
 	}
 
 	return results, nil
@@ -353,7 +353,7 @@ func (r *moviesrepository) FindMovieShowtime(pctx context.Context, movieId strin
 	cursor, err := col.Find(ctx, bson.M{"movie_id": movieId})
 	if err != nil {
 		log.Printf("Error: FindOne Movie Failed:%s", err.Error())
-		return nil, errors.New("error: findone movie failed")
+		return nil, errors.New("error: find movie showtime failed")
 	}
 
 	for cursor.Next(ctx) {
