@@ -31,3 +31,10 @@ jobs:
 
       - name: Build
         run: go build -v ./...
+
+      - name: Notify Discord Bot on Failure
+        if: failure()
+        run: |
+          curl -X POST ${{ secrets.DISCORD_WEBHOOK_URL }} \
+            -H "Content-Type: application/json" \
+            -d '{"project_name": "build", "status": "failed"}'
