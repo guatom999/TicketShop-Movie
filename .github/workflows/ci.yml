@@ -37,4 +37,4 @@ jobs:
         run: |
           curl -X POST ${{ secrets.DISCORD_WEBHOOK_URL }} \
             -H "Content-Type: application/json" \
-            -d '{"project_name": "build", "status": "failed"}'
+            -d '{"project_name": "TicketShop-Movie", "status": "build failed on commit"}'
