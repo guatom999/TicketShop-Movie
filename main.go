@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"log"
 	"os"
 
@@ -14,8 +13,6 @@ import (
 )
 
 func main() {
-
-	ctx := context.Background()
 
 	cfg := config.GetConfig(func() string {
 		if len(os.Args) < 2 {
