@@ -34,7 +34,9 @@ jobs:
 
       - name: Notify Discord Bot on Failure
         if: failure()
+        env:
+          WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: |
-          curl -X POST http://45.144.167.78:8099/bot/send \
+          curl -X POST "$WEBHOOK_URL" \
             -H "Content-Type: application/json" \
             -d '{"project_name": "TicketShop-Movie", "status": "build failed on commit"}'
