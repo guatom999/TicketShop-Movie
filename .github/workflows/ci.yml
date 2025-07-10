@@ -40,3 +40,11 @@ jobs:
           curl -X POST "$WEBHOOK_URL" \
             -H "Content-Type: application/json" \
             -d '{"project_name": "TicketShop-Movie", "status": "build failed on commit"}'
+
+      - name: Build and Push Docker image
+        uses: mr-smithers-excellent/docker-build-push@v6
+        with:
+          image: badzboss/demo-ci:tagname
+          registry: docker.io
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
