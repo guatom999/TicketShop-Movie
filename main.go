@@ -25,6 +25,7 @@ func main() {
 		return os.Args[1]
 	}())
 
+	//test workflow
 	db := database.DbConn(ctx, &cfg)
 
 	defer db.Disconnect(ctx)
