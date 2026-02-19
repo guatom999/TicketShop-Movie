@@ -159,7 +159,7 @@ func (u *paymentUseCase) BuyTicket(pctx context.Context, cfg *config.Config, req
 				Error:       res.Error,
 			}
 		}
-	case <-time.After(time.Second * 10):
+	case <-time.After(time.Second * 30):
 		u.paymentRepo.RollBackReserveSeat(pctx, cfg, &payment.RollBackReservedSeatReq{
 			MovieId: req.MovieId,
 			SeatNo:  req.SeatNo,
