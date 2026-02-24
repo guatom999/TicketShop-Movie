@@ -126,19 +126,38 @@ func (u *moviesUseCase) ReserveSeat(pctx context.Context, req *movie.ReserveDeta
 	}
 
 	for _, reserveSeatNo := range req.SeatNo {
+		found := false
 		for x, seatAvailable := range result.SeatAvailable {
-			if _, ok := seatAvailable[reserveSeatNo]; ok {
+			if val, ok := seatAvailable[reserveSeatNo]; ok {
+				if !val {
+					u.moviesRepo.ReserveSeatRes(pctx, u.cfg, &movie.ReserveSeatRes{
+						MovieId:     req.MovieId,
+						Seat_Number: req.SeatNo,
+						Error:       errors.New("error: seat already taken").Error(),
+					})
+					return errors.New("error: seat already taken")
+				}
 				result.SeatAvailable[x][reserveSeatNo] = false
+				found = true
 				break
-			} else if x == (len(result.SeatAvailable) - 1) {
-
-				u.moviesRepo.ReserveSeatRes(pctx, u.cfg, &movie.ReserveSeatRes{
-					MovieId:     req.MovieId,
-					Seat_Number: req.SeatNo,
-					Error:       errors.New("error: no seat match").Error(),
-				})
-				return errors.New("error: no seat match")
 			}
+			// else if x == (len(result.SeatAvailable) - 1) {
+
+			// 	u.moviesRepo.ReserveSeatRes(pctx, u.cfg, &movie.ReserveSeatRes{
+			// 		MovieId:     req.MovieId,
+			// 		Seat_Number: req.SeatNo,
+			// 		Error:       errors.New("error: no seat match").Error(),
+			// 	})
+			// 	return errors.New("error: no seat match")
+			// }
+		}
+		if !found {
+			u.moviesRepo.ReserveSeatRes(pctx, u.cfg, &movie.ReserveSeatRes{
+				MovieId:     req.MovieId,
+				Seat_Number: req.SeatNo,
+				Error:       errors.New("error: no seat match").Error(),
+			})
+			return errors.New("error: no seat match")
 		}
 	}
 
