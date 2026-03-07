@@ -83,6 +83,35 @@ func KafkaReader(cfg *config.Config, topic, groupID string) *kafka.Reader {
 	return reader
 }
 
+// KafkaConnConsumer สร้าง low-level connection สำหรับ request-reply pattern
+// DialLeader จะ return หลังจากเชื่อมต่อสำเร็จแล้วเท่านั้น (ไม่มี group rebalance)
+// Seek ไปท้าย partition เพื่ออ่านแค่ message ใหม่
+func KafkaConnConsumer(cfg *config.Config, topic string) (*kafka.Conn, error) {
+	dialer := &kafka.Dialer{
+		Timeout: 10 * time.Second,
+		TLS:     &tls.Config{},
+		SASLMechanism: plain.Mechanism{
+			Username: cfg.Kafka.ApiKey,
+			Password: cfg.Kafka.SecretKey,
+		},
+	}
+
+	conn, err := dialer.DialLeader(context.Background(), "tcp", cfg.Kafka.Url, topic, 0)
+	if err != nil {
+		return nil, fmt.Errorf("error: dial leader failed: %w", err)
+	}
+
+	// Seek to end of partition - only read new messages
+	if _, err := conn.Seek(0, kafka.SeekEnd); err != nil {
+		conn.Close()
+		return nil, fmt.Errorf("error: seek failed: %w", err)
+	}
+
+	fmt.Println("Consumer connection established")
+
+	return conn, nil
+}
+
 // func ReadMessages(conn *kafka.Conn, key string) {
 // 	for {
 

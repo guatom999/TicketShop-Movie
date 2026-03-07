@@ -93,56 +93,95 @@ func (u *paymentUseCase) CheckOutWithCreditCard(req *payment.CheckOutWithCreditC
 
 // }
 
-func (u *paymentUseCase) BuyTicketConsumer(pctx context.Context, cfg *config.Config, groupId string, topic string, key string, resCh chan<- *payment.RollBackReserveSeatRes) {
-	reader := queue.KafkaReader(u.cfg, topic, groupId)
-	defer reader.Close()
+func (u *paymentUseCase) BuyTicketConsumer(pctx context.Context, cfg *config.Config, topic string, key string, resCh chan<- *payment.RollBackReserveSeatRes, readyCh chan<- struct{}) {
+	// ใช้ low-level kafka.Conn แทน kafka.Reader
+	// DialLeader + Seek จะ block จนกว่าเชื่อมต่อสำเร็จจริงๆ
+	conn, err := queue.KafkaConnConsumer(u.cfg, topic)
+	if err != nil {
+		log.Printf("Error creating consumer connection: %s", err.Error())
+		close(resCh)
+		readyCh <- struct{}{}
+		return
+	}
+	defer conn.Close()
 
-	data := new(payment.RollBackReserveSeatRes)
+	// ถึงตรงนี้ connection พร้อมแล้ว 100% → ส่งสัญญาณ ready
+	readyCh <- struct{}{}
 
-	for {
-		select {
-		case <-pctx.Done():
-			log.Println("BuyTicketConsumer context cancelled")
-			close(resCh)
-			return
-		default:
-			msg, err := reader.ReadMessage(pctx)
-			if err != nil {
-				log.Printf("Error reading message: %s", err.Error())
-				close(resCh)
-				return
-			}
+	type msgResult struct {
+		data *payment.RollBackReserveSeatRes
+		err  error
+	}
+	msgCh := make(chan msgResult, 1)
 
-			if string(msg.Key) == key {
-				fmt.Println("============================>")
-				if err := json.Unmarshal(msg.Value, data); err != nil {
-					fmt.Printf("Error: Unmarshal error %s", err.Error())
+	go func() {
+		for {
+			// ReadBatch อ่าน message จาก partition โดยตรง (ไม่ผ่าน consumer group)
+			batch := conn.ReadBatch(1, 10e6) // minBytes=1, maxBytes=10MB
+
+			for {
+				msg, err := batch.ReadMessage()
+				if err != nil {
+					break // end of batch
 				}
 
-				resCh <- data
-				close(resCh)
-				return
+				if string(msg.Key) == key {
+					data := new(payment.RollBackReserveSeatRes)
+					if err := json.Unmarshal(msg.Value, data); err != nil {
+						fmt.Printf("Error: Unmarshal error %s\n", err.Error())
+						msgCh <- msgResult{err: err}
+						batch.Close()
+						return
+					}
+					msgCh <- msgResult{data: data}
+					batch.Close()
+					return
+				}
 			}
+			batch.Close()
 		}
+	}()
+
+	select {
+	case <-pctx.Done():
+		log.Println("BuyTicketConsumer context cancelled")
+		close(resCh)
+		return
+	case result := <-msgCh:
+		if result.err != nil {
+			log.Printf("Error reading message: %s", result.err.Error())
+			close(resCh)
+			return
+		}
+		resCh <- result.data
+		close(resCh)
+		return
 	}
 }
 
 func (u *paymentUseCase) BuyTicket(pctx context.Context, cfg *config.Config, req *payment.MovieBuyReq) (*payment.BuyticketRes, error) {
 
-	_, cancel := context.WithTimeout(context.Background(), time.Second*30)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 	defer cancel()
 
 	stage1 := new(payment.RollBackReserveSeatRes)
 
-	resCh := make(chan *payment.RollBackReserveSeatRes)
+	resCh := make(chan *payment.RollBackReserveSeatRes, 1)
+	readyCh := make(chan struct{}, 1)
 
-	go u.BuyTicketConsumer(pctx, cfg, "reserve-seat-res-group", "reserve-seat-res", "payment", resCh)
+	go u.BuyTicketConsumer(ctx, cfg, "reserve-seat-res", "payment", resCh, readyCh)
+
+	// รอให้ consumer เชื่อมต่อ Kafka สำเร็จก่อน ค่อยส่ง ReserveSeat
+	select {
+	case <-readyCh:
+		log.Println("Consumer is ready, sending ReserveSeat message...")
+	case <-ctx.Done():
+		return nil, errors.New("timeout waiting for consumer to be ready")
+	}
 
 	req.CustomerId = strings.TrimPrefix(req.CustomerId, "customer:")
 
-	fmt.Println("req.PosterImage is", req.PosterImage)
-
-	if err := u.paymentRepo.ReserveSeat(pctx, cfg, &payment.ReserveSeatReq{
+	if err := u.paymentRepo.ReserveSeat(ctx, cfg, &payment.ReserveSeatReq{
 		MovieName: req.MovieName,
 		MovieId:   req.MovieId,
 		SeatNo:    req.SeatNo,
@@ -159,8 +198,9 @@ func (u *paymentUseCase) BuyTicket(pctx context.Context, cfg *config.Config, req
 				Error:       res.Error,
 			}
 		}
-	case <-time.After(time.Second * 30):
-		u.paymentRepo.RollBackReserveSeat(pctx, cfg, &payment.RollBackReservedSeatReq{
+	// case <-time.After(time.Second * 30):
+	case <-ctx.Done():
+		u.paymentRepo.RollBackReserveSeat(ctx, cfg, &payment.RollBackReservedSeatReq{
 			MovieId: req.MovieId,
 			SeatNo:  req.SeatNo,
 		})
@@ -170,7 +210,7 @@ func (u *paymentUseCase) BuyTicket(pctx context.Context, cfg *config.Config, req
 
 	if stage1.Error != "" {
 		fmt.Println("stage1.Error", stage1.Error)
-		u.paymentRepo.RollBackReserveSeat(pctx, cfg, &payment.RollBackReservedSeatReq{
+		u.paymentRepo.RollBackReserveSeat(ctx, cfg, &payment.RollBackReservedSeatReq{
 			MovieId: req.MovieId,
 			SeatNo:  req.SeatNo,
 		})
@@ -179,7 +219,7 @@ func (u *paymentUseCase) BuyTicket(pctx context.Context, cfg *config.Config, req
 	}
 
 	if err := u.CheckOutWithCreditCard(&payment.CheckOutWithCreditCard{Token: req.Token, Price: req.Price}); err != nil {
-		u.paymentRepo.RollBackReserveSeat(pctx, cfg, &payment.RollBackReservedSeatReq{
+		u.paymentRepo.RollBackReserveSeat(ctx, cfg, &payment.RollBackReservedSeatReq{
 			MovieId: req.MovieId,
 			SeatNo:  req.SeatNo,
 		})
@@ -199,7 +239,7 @@ func (u *paymentUseCase) BuyTicket(pctx context.Context, cfg *config.Config, req
 
 	// destination := fmt.Sprintf(u.uploadPath + utils.RandFileName())
 
-	// fileUrl, err = gcpfile.UploadFile(u.cfg, u.cl, pctx, destination, png)
+	// fileUrl, err = gcpfile.UploadFile(u.cfg, u.cl, ctx, destination, png)
 	// if err != nil {
 	// 	log.Printf("Error: Upload file failed: %s", err.Error())
 	// 	fileUrl = `https://i1.sndcdn.com/artworks-x8zI2HVC2pnkK7F5-4xKLyA-t1080x1080.jpg`
@@ -209,7 +249,7 @@ func (u *paymentUseCase) BuyTicket(pctx context.Context, cfg *config.Config, req
 
 	orderNumber := utils.RandomString()
 
-	if err := u.paymentRepo.AddTicketToCustomer(pctx, cfg, &payment.AddCustomerTicket{
+	if err := u.paymentRepo.AddTicketToCustomer(ctx, cfg, &payment.AddCustomerTicket{
 		CustomerId:    req.CustomerId,
 		OrderNumber:   orderNumber,
 		Date:          req.Date,

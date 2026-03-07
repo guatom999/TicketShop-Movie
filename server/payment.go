@@ -1,12 +1,13 @@
 package server
 
 import (
+	"github.com/guatom999/TicketShop-Movie/modules/middlewares/middlewareHandlers"
 	paymentHandler "github.com/guatom999/TicketShop-Movie/modules/payment/paymentHandlers"
 	"github.com/guatom999/TicketShop-Movie/modules/payment/paymentRepositories"
 	"github.com/guatom999/TicketShop-Movie/modules/payment/paymentUseCases"
 )
 
-func (s *server) PaymentModule() {
+func (s *server) PaymentModule(authMiddleware middlewareHandlers.MiddlewareHandlerInterface) {
 
 	// client, err := storage.NewClient(context.Background())
 	// if err != nil {
@@ -29,6 +30,7 @@ func (s *server) PaymentModule() {
 	router := s.app.Group("/payment")
 
 	router.GET("/health", paymentHandler.HealthCheck)
+	// router.POST("/buyticket", paymentHandler.BuyTicket, authMiddleware.JwtAuthorize)
 	router.POST("/buyticket", paymentHandler.BuyTicket)
 	router.POST("/testupload", paymentHandler.TestUpload)
 	// router.POST("/checkoutwithcreditcard", paymentHandler.CheckOutWithCreditCard)

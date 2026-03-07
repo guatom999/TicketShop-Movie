@@ -119,7 +119,7 @@ func (s *server) Start(pctx context.Context) {
 	case "inventory":
 		s.InventoryModule()
 	case "payment":
-		s.PaymentModule()
+		s.PaymentModule(authMiddleware)
 	case "customer":
 		s.CustomerModules(authMiddleware)
 	}
