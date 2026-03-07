@@ -17,6 +17,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"github.com/segmentio/kafka-go"
 )
@@ -30,6 +31,7 @@ type (
 		FindMovieShowtime(pctx context.Context, movieId string) ([]*movie.MovieShowTimeRes, error)
 		GetOneMovieAvaliable(pctx context.Context, req *movie.ReserveDetailReq) (*movie.MovieAvaliable, error)
 		UpdateSeatStatus(pctx context.Context, movidId string, req *movie.MovieAvaliable) error
+		AtomicReserveSeat(pctx context.Context, movieId string, seatNos []string) error
 		ReserveSeatRes(pctx context.Context, cfg *config.Config, req *movie.ReserveSeatRes) error
 	}
 
@@ -240,6 +242,7 @@ func (r *moviesrepository) FindAllMovie(pctx context.Context, filter any) ([]*mo
 	value, err := r.redis.Get(ctx, "movies_list").Result()
 	if err == nil {
 		if err = json.Unmarshal([]byte(value), &results); err == nil {
+			log.Println("Cache hit: returning movies_list from redis")
 			return results, nil
 		}
 	}
@@ -274,9 +277,7 @@ func (r *moviesrepository) FindAllMovie(pctx context.Context, filter any) ([]*mo
 
 	_, err = r.redis.Set(ctx, "movies_list", string(data), time.Second*30).Result()
 	if err != nil {
-		log.Printf("Error: set redis failed :%s", err.Error())
-		// return make([]*movie.MovieData, 0), errors.New("error: set redis failed")
-		return results, nil
+		log.Printf("Warning: set redis failed (returning DB results): %s", err.Error())
 	}
 
 	return results, nil
@@ -295,8 +296,8 @@ func (r *moviesrepository) FindComingSoonMovie(pctx context.Context, filter any)
 	value, err := r.redis.Get(ctx, "comingsoon_list").Result()
 	if err == nil {
 		if err = json.Unmarshal([]byte(value), &results); err == nil {
-			fmt.Printf("Error: get comingsoon movies from redis failed :%s", err)
-			return results, errors.New("error: find comign soon movies failed")
+			log.Println("Cache hit: returning comingsoon_list from redis")
+			return results, nil
 		}
 	}
 
@@ -330,9 +331,7 @@ func (r *moviesrepository) FindComingSoonMovie(pctx context.Context, filter any)
 
 	_, err = r.redis.Set(ctx, "comingsoon_list", string(data), time.Second*30).Result()
 	if err != nil {
-		fmt.Println("Error: set redis failed", err.Error())
-		// return make([]*movie.MovieData, 0), errors.New("error: set redis failed")
-		return results, errors.New("error: find comign soon movies failed")
+		log.Printf("Warning: set redis failed (returning DB results): %s", err.Error())
 	}
 
 	return results, nil
@@ -432,6 +431,47 @@ func (r *moviesrepository) UpdateSeatStatus(pctx context.Context, movidId string
 	}
 
 	// log.Printf("update status is :%v", updateResult)
+
+	return nil
+}
+
+func (r *moviesrepository) AtomicReserveSeat(pctx context.Context, movieId string, seatNos []string) error {
+
+	ctx, cancel := context.WithTimeout(pctx, time.Second*20)
+	defer cancel()
+
+	db := r.db.Database("movie_db")
+	col := db.Collection("movie_available")
+
+	// สร้าง filter: ต้องเจอ document ที่มี seat ทุกตัวยังว่างอยู่ (true)
+	filter := bson.M{"_id": utils.ConvertStringToObjectId(movieId)}
+	for _, seat := range seatNos {
+		filter["seat_available."+seat] = true
+	}
+
+	// สร้าง update + arrayFilters: set แต่ละ seat เป็น false
+	updateFields := bson.M{}
+	arrayFilters := make([]interface{}, 0, len(seatNos))
+	for i, seat := range seatNos {
+		elemName := fmt.Sprintf("elem%d", i)
+		updateFields[fmt.Sprintf("seat_available.$[%s].%s", elemName, seat)] = false
+		arrayFilters = append(arrayFilters, bson.M{elemName + "." + seat: true})
+	}
+
+	update := bson.M{"$set": updateFields}
+	opts := options.FindOneAndUpdate().SetArrayFilters(options.ArrayFilters{
+		Filters: arrayFilters,
+	})
+
+	result := col.FindOneAndUpdate(ctx, filter, update, opts)
+	if result.Err() != nil {
+		if result.Err() == mongo.ErrNoDocuments {
+			log.Println("Error: Seat already taken or movie not found")
+			return errors.New("error: seat already taken")
+		}
+		log.Printf("Error: AtomicReserveSeat failed: %s", result.Err().Error())
+		return errors.New("error: reserve seat failed")
+	}
 
 	return nil
 }

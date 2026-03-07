@@ -46,6 +46,10 @@ func (m *MovieRepositoryMock) UpdateSeatStatus(pctx context.Context, movidId str
 	args := m.Called(pctx, movidId, req)
 	return args.Error(0)
 }
+func (m *MovieRepositoryMock) AtomicReserveSeat(pctx context.Context, movieId string, seatNos []string) error {
+	args := m.Called(pctx, movieId, seatNos)
+	return args.Error(0)
+}
 func (m *MovieRepositoryMock) ReserveSeatRes(pctx context.Context, cfg *config.Config, req *movie.ReserveSeatRes) error {
 	args := m.Called(pctx, cfg, req)
 	return args.Error(0)

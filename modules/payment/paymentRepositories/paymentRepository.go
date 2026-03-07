@@ -131,7 +131,7 @@ func (r *paymentRepository) ReserveSeat(pctx context.Context, cfg *config.Config
 		Value: utils.EncodeMessage(req),
 	}
 
-	conn.SetReadDeadline(time.Now().Add(10 * time.Second))
+	conn.SetReadDeadline(time.Now().Add(60 * time.Second))
 	_, err := conn.WriteMessages(message)
 
 	if err != nil {

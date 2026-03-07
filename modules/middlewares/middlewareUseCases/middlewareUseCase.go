@@ -33,6 +33,7 @@ func NewMiddlwareUseCase(
 func (u *middlewareUseCase) JwtAuthorize(c echo.Context, accessToken string) (echo.Context, error) {
 
 	ctx := c.Request().Context()
+	_ = ctx
 
 	claims, err := jwtauth.ParseToken(u.cfg.Jwt.AccessSecretKey, accessToken)
 	if err != nil {
@@ -40,9 +41,9 @@ func (u *middlewareUseCase) JwtAuthorize(c echo.Context, accessToken string) (ec
 		return nil, err
 	}
 
-	if err := u.middlewareRepository.AccessTokenSearch(ctx, u.cfg, accessToken); err != nil {
-		return nil, err
-	}
+	// if err := u.middlewareRepository.AccessTokenSearch(ctx, u.cfg, accessToken); err != nil {
+	// 	return nil, err
+	// }
 
 	c.Set("customer_id", claims.CustomerId)
 

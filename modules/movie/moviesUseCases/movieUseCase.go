@@ -41,6 +41,10 @@ func (u *moviesUseCase) AddOneMovie(pctx context.Context, req []*movie.AddMovieR
 
 	movieEntity := make([]*movie.Movie, 0)
 
+	if len(req) == 0 {
+		return errors.New("error: request is empty")
+	}
+
 	for i := 0; i < len(req); i++ {
 		movieEntity = append(movieEntity, &movie.Movie{
 			Title:           req[i].Title,
@@ -96,7 +100,7 @@ func (u *moviesUseCase) FindComingSoonMovie(pctx context.Context) ([]*movie.Movi
 
 	results, err := u.moviesRepo.FindComingSoonMovie(pctx, filter)
 	if err != nil {
-		return results, err
+		return make([]*movie.MovieData, 0), err
 	}
 
 	return results, nil
@@ -114,54 +118,9 @@ func (u *moviesUseCase) FindMovieShowTime(pctx context.Context, title string) ([
 
 func (u *moviesUseCase) ReserveSeat(pctx context.Context, req *movie.ReserveDetailReq) error {
 
-	result, err := u.moviesRepo.GetOneMovieAvaliable(pctx, req)
-	if err != nil {
-		// u.moviesRepo.RollbackSeatStatusRes(pctx, result)
-		u.moviesRepo.ReserveSeatRes(pctx, u.cfg, &movie.ReserveSeatRes{
-			MovieId:     req.MovieId,
-			Seat_Number: req.SeatNo,
-			Error:       err.Error(),
-		})
-		return err
-	}
-
-	for _, reserveSeatNo := range req.SeatNo {
-		found := false
-		for x, seatAvailable := range result.SeatAvailable {
-			if val, ok := seatAvailable[reserveSeatNo]; ok {
-				if !val {
-					u.moviesRepo.ReserveSeatRes(pctx, u.cfg, &movie.ReserveSeatRes{
-						MovieId:     req.MovieId,
-						Seat_Number: req.SeatNo,
-						Error:       errors.New("error: seat already taken").Error(),
-					})
-					return errors.New("error: seat already taken")
-				}
-				result.SeatAvailable[x][reserveSeatNo] = false
-				found = true
-				break
-			}
-			// else if x == (len(result.SeatAvailable) - 1) {
-
-			// 	u.moviesRepo.ReserveSeatRes(pctx, u.cfg, &movie.ReserveSeatRes{
-			// 		MovieId:     req.MovieId,
-			// 		Seat_Number: req.SeatNo,
-			// 		Error:       errors.New("error: no seat match").Error(),
-			// 	})
-			// 	return errors.New("error: no seat match")
-			// }
-		}
-		if !found {
-			u.moviesRepo.ReserveSeatRes(pctx, u.cfg, &movie.ReserveSeatRes{
-				MovieId:     req.MovieId,
-				Seat_Number: req.SeatNo,
-				Error:       errors.New("error: no seat match").Error(),
-			})
-			return errors.New("error: no seat match")
-		}
-	}
-
-	if err := u.moviesRepo.UpdateSeatStatus(pctx, req.MovieId, result); err != nil {
+	// ใช้ AtomicReserveSeat แทน GetOneMovieAvaliable + UpdateSeatStatus
+	// เพื่อป้องกัน race condition
+	if err := u.moviesRepo.AtomicReserveSeat(pctx, req.MovieId, req.SeatNo); err != nil {
 		u.moviesRepo.ReserveSeatRes(pctx, u.cfg, &movie.ReserveSeatRes{
 			MovieId:     req.MovieId,
 			Seat_Number: req.SeatNo,
