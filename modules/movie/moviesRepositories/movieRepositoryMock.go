@@ -18,8 +18,8 @@ func NewMovieRepoMock() MoviesRepositoryService {
 	return &MovieRepositoryMock{}
 }
 
-func (m *MovieRepositoryMock) InsertMovie(pctx context.Context, req []*movie.Movie, movieRound int64) error {
-	args := m.Called(pctx, req, movieRound)
+func (m *MovieRepositoryMock) InsertMovie(pctx context.Context, req []*movie.Movie) error {
+	args := m.Called(pctx, req)
 	return args.Error(0)
 }
 func (m *MovieRepositoryMock) FindOneMovie(pctx context.Context, movieId string) (*movie.MovieShowCase, error) {

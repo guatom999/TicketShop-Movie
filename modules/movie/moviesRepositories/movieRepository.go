@@ -24,7 +24,7 @@ import (
 
 type (
 	MoviesRepositoryService interface {
-		InsertMovie(pctx context.Context, req []*movie.Movie, movieRound int64) error
+		InsertMovie(pctx context.Context, req []*movie.Movie) error
 		FindOneMovie(pctx context.Context, movieId string) (*movie.MovieShowCase, error)
 		FindAllMovie(pctx context.Context, filter any) ([]*movie.MovieData, error)
 		FindComingSoonMovie(pctx context.Context, filter any) ([]*movie.MovieData, error)
@@ -73,7 +73,7 @@ func MovieProducer(pctx context.Context, cfg *config.Config, topic string) *kafk
 
 }
 
-func (r *moviesrepository) InsertMovie(pctx context.Context, req []*movie.Movie, movieRound int64) error {
+func (r *moviesrepository) InsertMovie(pctx context.Context, req []*movie.Movie) error {
 
 	ctx, cancel := context.WithTimeout(pctx, time.Second*20)
 	defer cancel()
@@ -115,6 +115,9 @@ func (r *moviesrepository) InsertMovie(pctx context.Context, req []*movie.Movie,
 
 	lastInsertId := result.InsertedIDs[0].(primitive.ObjectID)
 
+	theaterOpenHours := 10
+	theaterOpenMinute := 30
+
 	col = db.Collection("movie_available")
 
 	addMovieAvailable := func() []any {
@@ -122,7 +125,7 @@ func (r *moviesrepository) InsertMovie(pctx context.Context, req []*movie.Movie,
 		datas := make([]any, 0)
 
 		for i := 0; i < len(req); i++ {
-			for x := 0; x < dayLength*int(movieRound); x++ {
+			for x := 0; x < dayLength*int(req[i].MoviesRoundPerDay); x++ {
 				data := movie.MovieAvaliable{
 					Movie_Id:  result.InsertedIDs[i].(primitive.ObjectID).Hex(),
 					Title:     req[i].Title,
@@ -130,7 +133,16 @@ func (r *moviesrepository) InsertMovie(pctx context.Context, req []*movie.Movie,
 					UpdatedAt: func() time.Time {
 						return utils.GetLocaltime()
 					}(),
-					Showtime: utils.SetSpecificTime(req[i].ReleaseAt.Year(), req[i].ReleaseAt.Month(), req[i].ReleaseAt.Day()+int(math.Floor(float64(x)/float64(movieRound))), 10+(x%int(movieRound)), 30, 0),
+					Showtime: utils.SetSpecificTime(
+						req[i].ReleaseAt.Year(),
+						req[i].ReleaseAt.Month(),
+						req[i].ReleaseAt.Day()+int(math.Floor(float64(x)/float64(req[i].MoviesRoundPerDay))),
+						// theaterOpenHours+(x%int(req[i].MoviesRoundPerDay)),
+						// theaterOpenHours+(x*int(math.Ceil(float64(req[i].RunningTime)))%(int(req[i].MoviesRoundPerDay)*int(req[i].RunningTime))),
+						theaterOpenHours+(x*int(math.Ceil(float64(req[i].RunningTime)/60))%(int(req[i].MoviesRoundPerDay)*int(math.Ceil(float64(req[i].RunningTime)/60)))),
+						theaterOpenMinute,
+						0,
+					),
 					//Need Refactor
 					SeatAvailable: []movie.SeatAvailable{
 						{"A1": true},
@@ -223,9 +235,9 @@ func (r *moviesrepository) FindOneMovie(pctx context.Context, movieId string) (*
 	return &movie.MovieShowCase{
 		Title:       result.Title,
 		Description: result.Description,
-		RunningTime: result.RunningTime,
-		Price:       result.Price,
-		ImageUrl:    result.ImageUrl,
+		// RunningTime: result.RunningTime,
+		Price:    result.Price,
+		ImageUrl: result.ImageUrl,
 	}, nil
 }
 

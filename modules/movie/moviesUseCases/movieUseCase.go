@@ -47,20 +47,21 @@ func (u *moviesUseCase) AddOneMovie(pctx context.Context, req []*movie.AddMovieR
 
 	for i := 0; i < len(req); i++ {
 		movieEntity = append(movieEntity, &movie.Movie{
-			Title:           req[i].Title,
-			Description:     req[i].Description,
-			RunningTime:     req[i].RunningTime,
-			Price:           req[i].Price,
-			ImageUrl:        req[i].ImageUrl,
-			CreatedAt:       time.Now(),
-			UpdatedAt:       time.Now(),
-			Category:        "RomCom",
-			ReleaseAt:       utils.ConvertStringDateToTime(req[i].ReleaseAt),
-			OutOfTheatersAt: utils.ConvertStringDateToTime(req[i].OutOfTheatersAt),
+			Title:             req[i].Title,
+			Description:       req[i].Description,
+			RunningTime:       req[i].RunningTime,
+			Price:             req[i].Price,
+			ImageUrl:          req[i].ImageUrl,
+			CreatedAt:         time.Now(),
+			UpdatedAt:         time.Now(),
+			Category:          "RomCom",
+			ReleaseAt:         utils.ConvertStringDateToTime(req[i].ReleaseAt),
+			OutOfTheatersAt:   utils.ConvertStringDateToTime(req[i].OutOfTheatersAt),
+			MoviesRoundPerDay: req[i].MoviesRoundPerDay,
 		})
 	}
 
-	if err := u.moviesRepo.InsertMovie(pctx, movieEntity, req[0].MoviesRoundPerDay); err != nil {
+	if err := u.moviesRepo.InsertMovie(pctx, movieEntity); err != nil {
 		return err
 	}
 	return nil

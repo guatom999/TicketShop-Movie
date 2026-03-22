@@ -2,9 +2,10 @@ package movie
 
 type (
 	AddMovieReq struct {
-		Title             string  `json:"title"`
-		Description       string  `json:"description" `
-		RunningTime       string  `json:"running_time"`
+		Title       string `json:"title"`
+		Description string `json:"description" `
+		// RunningTime       string  `json:"running_time"`
+		RunningTime       int64   `json:"running_time"`
 		Price             float64 `json:"price"`
 		ImageUrl          string  `json:"image_url"`
 		Avaliable         int     `json:"avaliable"`

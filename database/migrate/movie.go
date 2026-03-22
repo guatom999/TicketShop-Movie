@@ -36,7 +36,7 @@ func MovieMigrate(pctx context.Context, cfg *config.Config) {
 			{
 				Title:           "Lalaland",
 				Description:     "Lorem Ipsum is simply dummy text of the printing and typesetting industry. ",
-				RunningTime:     "1 ชั่วโมง 30 นาที",
+				RunningTime:     128,
 				Price:           150,
 				ImageUrl:        "https://i5.walmartimages.com/seo/La-La-Land-Movie-Poster-Poster-Print-24-x-36_20f02811-01b4-4aea-9bb2-a79942bd2642_1.856c035d66f8fd216f6d933259bc3dfb.jpeg",
 				CreatedAt:       utils.GetLocaltime(),
@@ -48,7 +48,7 @@ func MovieMigrate(pctx context.Context, cfg *config.Config) {
 			{
 				Title:           "GI JOE",
 				Description:     "Lorem Ipsum is simply dummy text of the printing and typesetting industry. ",
-				RunningTime:     "1 ชั่วโมง 30 นาที",
+				RunningTime:     128,
 				Price:           150,
 				ImageUrl:        "https://m.media-amazon.com/images/M/MV5BMTQzMTU1NzQwNl5BMl5BanBnXkFtZTcwNDg4NzMzMw@@._V1_.jpg",
 				CreatedAt:       utils.GetLocaltime(),
@@ -60,7 +60,7 @@ func MovieMigrate(pctx context.Context, cfg *config.Config) {
 			{
 				Title:           "HarryPotter1",
 				Description:     "Lorem Ipsum is simply dummy text of the printing and typesetting industry. ",
-				RunningTime:     "1 ชั่วโมง 30 นาที",
+				RunningTime:     128,
 				Price:           150,
 				ImageUrl:        "https://lh3.googleusercontent.com/proxy/Hh8fT3IQBPFWFkHdvwDBig3USKUOCYXqvzcVWq1Rj_S3tm1k0NzUUlbrjjHyWjCylx6bHsvhOhGdQ_EfsRUDYlR86b1TJZZzjtcDAetDy-rsTdDKL5lIfcGyjeiW1b3OMbhRcmEEniv6EYBNhRJPZZggmy1QGJ_SYX-iHfg-K_knSf5H",
 				CreatedAt:       utils.GetLocaltime(),
@@ -72,7 +72,7 @@ func MovieMigrate(pctx context.Context, cfg *config.Config) {
 			{
 				Title:           "HarryPotter3",
 				Description:     "Lorem Ipsum is simply dummy text of the printing and typesetting industry. ",
-				RunningTime:     "1 ชั่วโมง 30 นาที",
+				RunningTime:     128,
 				Price:           150,
 				ImageUrl:        "https://lh3.googleusercontent.com/proxy/Hh8fT3IQBPFWFkHdvwDBig3USKUOCYXqvzcVWq1Rj_S3tm1k0NzUUlbrjjHyWjCylx6bHsvhOhGdQ_EfsRUDYlR86b1TJZZzjtcDAetDy-rsTdDKL5lIfcGyjeiW1b3OMbhRcmEEniv6EYBNhRJPZZggmy1QGJ_SYX-iHfg-K_knSf5H",
 				CreatedAt:       utils.GetLocaltime(),
@@ -84,7 +84,7 @@ func MovieMigrate(pctx context.Context, cfg *config.Config) {
 			{
 				Title:           "HarryPotter4",
 				Description:     "Lorem Ipsum is simply dummy text of the printing and typesetting industry. ",
-				RunningTime:     "1 ชั่วโมง 30 นาที",
+				RunningTime:     128,
 				Price:           150,
 				ImageUrl:        "https://lh3.googleusercontent.com/proxy/Hh8fT3IQBPFWFkHdvwDBig3USKUOCYXqvzcVWq1Rj_S3tm1k0NzUUlbrjjHyWjCylx6bHsvhOhGdQ_EfsRUDYlR86b1TJZZzjtcDAetDy-rsTdDKL5lIfcGyjeiW1b3OMbhRcmEEniv6EYBNhRJPZZggmy1QGJ_SYX-iHfg-K_knSf5H",
 				CreatedAt:       utils.GetLocaltime(),
@@ -96,7 +96,7 @@ func MovieMigrate(pctx context.Context, cfg *config.Config) {
 			{
 				Title:           "HarryPotter5",
 				Description:     "Lorem Ipsum is simply dummy text of the printing and typesetting industry. ",
-				RunningTime:     "1 ชั่วโมง 30 นาที",
+				RunningTime:     128,
 				Price:           150,
 				ImageUrl:        "https://lh3.googleusercontent.com/proxy/Hh8fT3IQBPFWFkHdvwDBig3USKUOCYXqvzcVWq1Rj_S3tm1k0NzUUlbrjjHyWjCylx6bHsvhOhGdQ_EfsRUDYlR86b1TJZZzjtcDAetDy-rsTdDKL5lIfcGyjeiW1b3OMbhRcmEEniv6EYBNhRJPZZggmy1QGJ_SYX-iHfg-K_knSf5H",
 				CreatedAt:       utils.GetLocaltime(),
