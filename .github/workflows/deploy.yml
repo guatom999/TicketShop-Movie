@@ -11,11 +11,14 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
 
+    # Recently Tag and Push the Docker Image to Docker Hub
     strategy:
       matrix:
         service:
           - image: ticketshop-movie
-            tag: v1.0.5
+            tag: v1.0.6
+          - image: ticketshop-payment
+            tag: v1.0.10
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -29,7 +32,7 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build and Push ${{ matrix.service }}
+      - name: Build and Push ${{ matrix.service.image }}
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -38,3 +41,24 @@ jobs:
           tags: ${{ env.DOCKER_USERNAME }}/${{ matrix.service.image }}:${{ matrix.service.tag }}
           cache-from: type=gha,scope=${{ matrix.service.image }}
           cache-to: type=gha,mode=max,scope=${{ matrix.service.image }}
+  
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            cd /opt/ticketshop
+
+            sed -i 's/^MOVIE_TAG=.*/MOVIE_TAG=v1.0.6/' .env
+            sed -i 's/^PAYMENT_TAG=.*/PAYMENT_TAG=v1.0.10/' .env
+
+            docker compose pull
+            docker compose up -d --remove-orphans
+
+            docker image prune -af

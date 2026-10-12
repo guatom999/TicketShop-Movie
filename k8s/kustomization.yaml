@@ -1,0 +1,20 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: ticketshop-test
+
+resources:
+  - namespace.yaml
+  - mongodb.yaml
+  - redis.yaml
+  - movie.yaml
+
+secretGenerator:
+  - name: movie-env
+    files:
+      - .env=movie.config
+
+generatorOptions:
+  labels:
+    app.kubernetes.io/part-of: ticketshop
+    app.kubernetes.io/environment: local
